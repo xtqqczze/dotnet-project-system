@@ -92,8 +92,10 @@
       <DataSource Persistence="ProjectFileWithInterception"
                   HasConfigurationCondition="False" />
     </EnumProperty.DataSource>
-    <EnumValue Name="On" DisplayName="On" />
-    <EnumValue Name="Off" DisplayName="Off" />
+    <EnumValue Name="On" DisplayName="On">
+    </EnumValue>
+    <EnumValue Name="Off" DisplayName="Off">
+    </EnumValue>
   </EnumProperty>
 
   <EnumProperty Name="OptionStrict"
@@ -105,8 +107,10 @@
       <DataSource Persistence="ProjectFileWithInterception"
                   HasConfigurationCondition="False" />
     </EnumProperty.DataSource>
-    <EnumValue Name="On" DisplayName="On" />
-    <EnumValue Name="Off" DisplayName="Off" />
+    <EnumValue Name="On" DisplayName="On">
+    </EnumValue>
+    <EnumValue Name="Off" DisplayName="Off">
+    </EnumValue>
   </EnumProperty>
 
   <EnumProperty Name="OptionCompare"
@@ -118,8 +122,10 @@
       <DataSource Persistence="ProjectFileWithInterception"
                   HasConfigurationCondition="False" />
     </EnumProperty.DataSource>
-    <EnumValue Name="Binary" DisplayName="Binary" />
-    <EnumValue Name="Text" DisplayName="Text" />
+    <EnumValue Name="Binary" DisplayName="Binary">
+    </EnumValue>
+    <EnumValue Name="Text" DisplayName="Text">
+    </EnumValue>
   </EnumProperty>
 
   <EnumProperty Name="OptionInfer"
@@ -131,8 +137,12 @@
       <DataSource Persistence="ProjectFileWithInterception"
                   HasConfigurationCondition="False" />
     </EnumProperty.DataSource>
-    <EnumValue Name="On" DisplayName="On" />
-    <EnumValue Name="Off" DisplayName="Off" />
+    <EnumValue Name="On" DisplayName="On">
+      <!-- On: This is a VB keyword and should not be translated -->
+    </EnumValue>
+    <EnumValue Name="Off" DisplayName="Off">
+      <!-- Off: This is a VB keyword and should not be translated -->
+    </EnumValue>
   </EnumProperty>
 
   <DynamicEnumProperty Name="PlatformTarget"
@@ -167,7 +177,32 @@
       </NameValuePair>
     </BoolProperty.Metadata>
   </BoolProperty>
-
+  
+  <BoolProperty Name="PreferNativeArm64"
+                DisplayName="Prefer Native ARM64"
+                Description="Run on native hardware platform by default."
+                HelpUrl="https://go.microsoft.com/fwlink/?linkid=2166468"
+                Category="General">
+    <BoolProperty.Metadata>
+      <NameValuePair Name="DependsOn" Value="Build::PlatformTarget" />
+      <NameValuePair Name="DependsOn" Value="Application::OutputType" />
+      <NameValuePair Name="VisibilityCondition">
+        <!-- Visibility based on: https://github.com/dotnet/msbuild/blob/9bcc06cbe19ae2482ab18eab90a82fd079b26897/src/Tasks/Microsoft.NETFramework.CurrentVersion.props#L87 -->
+        <NameValuePair.Value>
+          (and
+            (has-net-framework)
+            (has-evaluated-value "Build" "PlatformTarget" "Any CPU")
+            (or
+              (has-evaluated-value "Application" "OutputType" "Exe")
+              (has-evaluated-value "Application" "OutputType" "WinExe")
+              (has-evaluated-value "Application" "OutputType" "AppContainerExe")
+            )
+          )
+        </NameValuePair.Value>
+      </NameValuePair>
+    </BoolProperty.Metadata>
+  </BoolProperty>
+  
   <EnumProperty Name="WarningSeverity"
                 DisplayName="Warning severity"
                 HelpUrl="https://go.microsoft.com/fwlink/?linkid=2196261"
@@ -450,11 +485,12 @@
                   DisplayName="Custom constants"
                   HelpUrl="https://go.microsoft.com/fwlink/?linkid=2196264"
                   Category="Advanced"
-                  Description="Specifies custom conditional compilation constants for your application.">
+                  Description="Specifies custom conditional compilation constants for your application. Note that values are optional, for the optional behavior leave the value blank. If the value is a string, please add quotation marks around it.">
     <StringProperty.ValueEditors>
       <ValueEditor EditorType="NameValueList">
         <ValueEditor.Metadata>
-          <NameValuePair Name="Encoding" Value="NameQuotedValuePairListEncoding" />
+          <NameValuePair Name="Encoding" Value="VBDefineConstantsEncoding"/>
+          <NameValuePair Name="IsValueRequired" Value="False"/>
         </ValueEditor.Metadata>
       </ValueEditor>
     </StringProperty.ValueEditors>

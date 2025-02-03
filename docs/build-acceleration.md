@@ -2,7 +2,7 @@
 
 Build acceleration is a feature of Visual Studio that reduces the time required to build projects.
 
-The feature was added in 17.5 and is currently opt-in. It applies to SDK-style .NET projects only. It is simple to try, and in most cases will improve build times. Larger solutions will see greater gains.
+The feature was added in 17.5 and applies to SDK-style .NET projects only. It will reduce the times of most multi-project builds. Larger solutions will see greater gains.
 
 This document will outline what the feature does, how to enable it, and when it might not be suitable.
 
@@ -33,19 +33,36 @@ With build acceleration enabled MSBuild is called only once, after which VS copi
 
 ## Configuration
 
-Build acceleration is currently opt-in.
+Build Acceleration is enabled by default in Visual Studio 17.8 and later, for all SDK-style .NET projects. This flag is enabled by default, and is found under _Tools | Options_.
 
-To enable it in your solution, add or edit a top-level [`Directory.Build.props`](https://learn.microsoft.com/visualstudio/msbuild/customize-your-build) file to include:
+You can explicitly opt a project in or out by setting the `AccelerateBuildsInVisualStudio` MSBuild property to `true` or `false` respectively. This can be set in the project file, or in a [`Directory.Build.props`](https://learn.microsoft.com/visualstudio/msbuild/customize-your-build) file that applies to multiple projects at once. This property takes precedence over the feature flag, so you can use it to override the default behavior of the IDE for specific projects.
+
+If you are targeting frameworks earlier than `net5.0`, you may also need to set the `ProduceReferenceAssembly` property to true. See [Reference Assemblies](#reference-assemblies) for more information.
+
+Be sure to follow the steps in [Validate builds are accelerated](#validate-builds-are-accelerated) to ensure that build acceleration is working correctly for your projects.
+
+### Disabling Build Acceleration for projects referencing specific NuGet packages
+
+While rare, it's possible for a NuGet package to include `.props` and/or `.targets` files that customise the build in a way that's not compatible with Build Acceleration. Ideally such packages would also set `AccelerateBuildsInVisualStudio` to `false`, however that's not always an option.
+
+To address this situation, you can specify the names of NuGet packages that, when present in a project, will disable Build Acceleration.
+
+For example, if `MyPackage` is known to be incompatible with Build Acceleration, adding a `BuildAccelerationIncompatiblePackage` item  to your `Directory.Build.props` will automatically cause Build Acceleration to be disabled for any project that references that `MyPackage`:
 
 ```xml
 <Project>
   <PropertyGroup>
     <AccelerateBuildsInVisualStudio>true</AccelerateBuildsInVisualStudio>
+    <ProduceReferenceAssembly>true</ProduceReferenceAssembly>
   </PropertyGroup>
+  <ItemGroup>
+    <!-- Disable Build Acceleration for projects that reference specific incompatible packages. -->
+    <BuildAccelerationIncompatiblePackage Include="MyPackage" />
+  </ItemGroup>
 </Project>
 ```
 
-You may disable build acceleration for specific projects in your solution by redefining the `AccelerateBuildsInVisualStudio` property as `false` in those projects.
+The .NET Project System includes a list of known, commonly used packages that don't work with Build Acceleration. To disable this default list, set the `EnableDefaultBuildAccelerationIncompatiblePackages` property to `false`.
 
 ## Debugging
 
@@ -55,7 +72,13 @@ Build acceleration runs with the FUTDC, and outputs details of its operation in 
 
 > Tools | Options | Projects and Solutions | SDK-Style Projects
 
-![Projects and Solutions, .NET Core options](repo/images/options.png)
+_Traditional view:_
+
+<img src="repo/images/options.png" width="528" alt="SDK-style project options, in the legacy settings view">
+
+_Unified settings view:_
+
+<img src="repo/images/options-unified.png" width="528" alt="SDK-style project options, in the modern unified settings view">
 
 Setting _Logging Level_ to a value other than `None` results in messages prefixed with `FastUpToDate:` in Visual Studio's build output.
 
@@ -102,11 +125,19 @@ Looking through the build output with the following points in mind:
 
 - ⛔ If you see:
 
+   > Build acceleration is not available for this project because it copies duplicate files to the output directory: '<path1>', '<path2>'
+
+   Then multiple projects want to copy the same file to the output directory. Currently, Build Acceleration does not attempt to discover which of these source files should win. Instead, when this situation occurs, Build Acceleration is disabled.
+
+- ⛔ If you see:
+
    > This project has enabled build acceleration, but not all referenced projects produce a reference assembly. Ensure projects producing the following outputs have the 'ProduceReferenceAssembly' MSBuild property set to 'true': '&lt;path1&gt;', '&lt;path2&gt;'.
 
    Then build acceleration will not know whether it is safe to copy a modified output DLL from a referenced project or not. We rely on the use of reference assemblies to convey this information. To address this, ensure all referenced projects have the `ProduceReferenceAssembly` property set to `true`. You may like to add this to your `Directory.Build.props` file alongside the `AccelerateBuildsInVisualStudio` property. Note that projects targeting `net5.0` or later produce reference assemblies by default. Projects that target .NET Standard may require this to be specified manually (see https://github.com/dotnet/project-system/issues/8865).
 
    This message lists the referenced projects that are not producing a reference assembly. The `TargetPath` of those projects is used, as this can help disambiguate between target frameworks in multi-targeting projects.
+
+   For more information, see [Reference Assemblies](#reference-assemblies).
 
 - ✅ You should see a section listing items to copy:
 
@@ -135,6 +166,27 @@ Looking through the build output with the following points in mind:
    This indicates that rather than calling MSBuild to build the project, Visual Studio has copied the listed files directly. The check completed quickly, the project is reported as up-to-date, and the next project (if any) can start building.
 
    ⚠️ Note that the bug described in [Discrepancies between FUTDC logging and build summary](up-to-date-check.md#discrepancies-between-futdc-logging-and-build-summary) may cause the number of succeeded projects to be overstated. This requires changes within Visual Studio, and we hope to fix this in a future release.
+
+## Reference Assemblies
+
+A reference assembly is a DLL that models the public API of a project, without any actual implementation.
+
+During build, reference assembly timestamps are only updated when their project's public API changes. Incremental build systems use file system timestamps for many of their optimisations. If project changes are internal-only (e.g. method bodies, private members added/removed, documentation changed) then the timestamp is not changed. Knowing the time at which a public API was last changed allows skipping some compilation.
+
+This is useful in multi-project builds, where projects reference one another. Consider two projects, where `A` references `B`:
+
+```mermaid
+graph LR
+    A --> B
+```
+
+In our example, `A` only need to recompile if it has its own changes, or if `B`'s reference assembly changes. In the common case that `B`'s implementation changed but not its reference assembly, the build of `A` can be made faster by skipping recompilation and copying `B`'s implementation assembly into `A`'s output folder.
+
+Production of a reference assembly is controlled by the `ProduceReferenceAssembly` MSBuild property, and the feature is part of MSBuild directly. This means it works well outside of VS, in case you also do CLI builds. Note that most CI builds are non-incremental (they happen on fresh clones), so this property has no impact there.
+
+When `ProduceReferenceAssembly` was introduced in .NET 5, it was only enabled by default for .NET 5 and later. We investigated changing the default for earlier frameworks too, but this caused issues in a very small number of highly customised builds and we take backwards compatibility very seriously. That said, it's generally desirable to configure projects to produce reference assemblies, regardless of whether you use Build Acceleration or not.
+
+For more information, see [Reference Assemblies](https://learn.microsoft.com/dotnet/standard/assembly/reference-assemblies) on Microsoft Learn.
 
 ## Limitations
 

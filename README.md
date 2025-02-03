@@ -3,12 +3,6 @@
 | Release             | Build                   | Compliance                   | Publish                   | Localization
 |---------------------|:-----------------------:|:----------------------------:|:-------------------------:|:-------------------------:
 | [main][MainBranch]  | [![MainBuild]][MainRun] | [![MainCompliance]][MainRun] | [![MainPublish]][MainRun] | [![MainLocalization]][MainRun]
-| [16.11][1611Branch] | [![1611Build]][1611Run] |                              |                           |
-| [17.0][170Branch]   | [![170Build]][170Run]   |                              |                           |
-| [17.1][171Branch]   | [![171Build]][171Run]   |                              |                           |
-| [17.2][172Branch]   | [![172Build]][172Run]   |                              |                           |
-| [17.3][173Branch]   | [![173Build]][173Run]   |                              |                           |
-| [17.4][173Branch]   | [![174Build]][174Run]   | [![174Compliance]][174Run]   | [![174Publish]][174Run]   | [![174Localization]][174Run]
 
 This repository contains the .NET Project System for [Visual Studio](https://visualstudio.microsoft.com/vs/) that is written on top of the [Common Project System (CPS)](https://github.com/microsoft/VSProjectSystem) framework. In Visual Studio 2017, Visual Studio 2019, and Visual Studio 2022, this project system is used for .NET Core [SDK-style] (C#, F# and Visual Basic) and Shared Projects (C# and Visual Basic) project types. In the [long term](docs/repo/roadmap.md), this project system will be the basis for all C#, F# and Visual Basic project types. For a list of feature differences between the project systems, see [Feature Comparison](docs/feature-comparison.md).
 
@@ -69,6 +63,14 @@ All the command line arguments provided to **build.cmd** get forwarded to MSBuil
 We welcome you to try things out, [file issues](https://github.com/dotnet/project-system/issues), make feature requests, and join us in design conversations. If you are looking for something to work on, take a look at our [help wanted issues](https://github.com/dotnet/project-system/issues?q=is%3Aopen+is%3Aissue+label%3A%22Help+Wanted%22) for a great place to start. Also, check out our [contributing guide](CONTRIBUTING.md).
 
 This project has adopted a code of conduct adapted from the [Contributor Covenant](https://www.contributor-covenant.org) to clarify expected behavior in our community. This code of conduct has been [adopted by many other projects](https://www.contributor-covenant.org/adopters/). For more information, see [Contributors Code of conduct](https://github.com/dotnet/home/blob/master/guidance/be-nice.md).
+
+## Trademarks
+
+This project may contain trademarks or logos for projects, products, or services. Authorized use of Microsoft trademarks or logos is subject to and must follow [Microsoft's Trademark & Brand Guidelines](https://www.microsoft.com/legal/intellectualproperty/trademarks/usage/general). Use of Microsoft trademarks or logos in modified versions of this project must not cause confusion or imply Microsoft sponsorship. Any use of third-party trademarks or logos are subject to those third-party's policies.
+
+## Data Collection
+
+The software may collect information about you and your use of the software and send it to Microsoft. Microsoft may use this information to provide services and improve our products and services. You may turn off the telemetry as described in ["Visual Studio Customer Experience Improvement Program"](https://learn.microsoft.com/visualstudio/ide/visual-studio-experience-improvement-program). There are also some features in the software that may enable you and Microsoft to collect data from users of your applications. If you use these features, you must comply with applicable law, including providing appropriate notices to users of your applications together with a copy of Microsoft’s privacy statement. Our privacy statement is located at https://go.microsoft.com/fwlink/?LinkID=824704. You can learn more about data collection and use in the help documentation and our privacy statement. Your use of the software operates as your consent to these practices.
 
 <!-- References -->
 

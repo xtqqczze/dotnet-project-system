@@ -8,8 +8,35 @@
     <RootNamespace>Microsoft.VisualStudio</RootNamespace>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <TargetFrameworks>net472;$(NetCoreTargetFramework)</TargetFrameworks>
+  </PropertyGroup>
+
+  <!-- TODO: Re-enable nullability and clean up warnings. -->
+  <PropertyGroup Condition="'$(TargetFramework)' == '$(NetCoreTargetFramework)'">
+    <Nullable>annotations</Nullable>
+    <NoWarn>$(NoWarn);RS0037</NoWarn>
+  </PropertyGroup>
+
+  <!-- TODO: Remove this once ImageMoniker and related types are available in a net8.0-compatible package. -->
+  <ItemGroup Condition="'$(TargetFramework)' == '$(NetCoreTargetFramework)'">
+    <!--<PackageReference Remove="Microsoft.VisualStudio.SDK.EmbedInteropTypes" />
+    <PackageReference Remove="Microsoft.VisualStudio.ImageCatalog" />-->
+
+    <!--<Compile Remove="ProjectSystem\CopyPaste\**\*.cs" />-->
+    <Compile Remove="ProjectSystem\Imaging\**\*.cs" />
+    <Compile Remove="ProjectSystem\Tree\**\*.cs" />
+
+    <Compile Remove="Mocks\IMockDependenciesViewModelFactory.cs" />
+    <Compile Remove="Mocks\IProjectDependenciesSubTreeProviderFactory.cs" />
+    <Compile Remove="Mocks\MockIDependenciesTreeServices.cs" />
+    <Compile Remove="Mocks\TestDependencyModel.cs" />
+    <Compile Remove="Mocks\IProjectDependenciesSubTreeProviderFactory.cs" />
+    <Compile Remove="Mocks\IProjectImageProviderFactory.cs" />
+  </ItemGroup>
+
   <ItemGroup>
-    <Reference Include="WindowsBase" />
+    <PackageReference Include="System.Formats.Asn1" />
   </ItemGroup>
 
   <ItemGroup>
@@ -17,7 +44,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\DeployTestDependencies\DeployTestDependencies.csproj" ReferenceOutputAssembly="false" />
     <ProjectReference Include="..\..\src\Microsoft.VisualStudio.ProjectSystem.Managed\Microsoft.VisualStudio.ProjectSystem.Managed.csproj" />
   </ItemGroup>
 

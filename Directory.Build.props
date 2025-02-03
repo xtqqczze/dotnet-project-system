@@ -22,18 +22,17 @@
   <PropertyGroup>
     <MinimumVisualStudioVersion>17.0</MinimumVisualStudioVersion>
     <SuppressNETCoreSdkPreviewMessage>true</SuppressNETCoreSdkPreviewMessage>
+    <NetCoreTargetFramework>net8.0</NetCoreTargetFramework>
     <!--
       IMPORTANT: The reason we use 99.0.0 is because we need a version number that will always be above the published version of the assemblies/packages.
       This causes VS to always prefer our locally build packages for debugging (F5) purposes.
     -->
     <LocalBuildVersion>99.0.0</LocalBuildVersion>
 
-    <!-- All projects in this repository target the same framework by default -->
-    <TargetFramework>net472</TargetFramework>
     <!-- Without setting TargetFrameworkVersion for .vsmanproj, GetReferenceAssemblyPaths runs against v4.0, which isn't installed on CI. -->
     <!-- error MSB3644: The reference assemblies for .NETFramework,Version=v4.0 were not found. To resolve this, install the Developer Pack (SDK/Targeting Pack) for this framework version or retarget your application. You can download .NET Framework Developer Packs at https://aka.ms/msbuild/developerpacks -->
     <TargetFrameworkVersion Condition="'$(MSBuildProjectExtension)' == '.vsmanproj'">v4.7.2</TargetFrameworkVersion>
-    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <AppendTargetFrameworkToOutputPath>true</AppendTargetFrameworkToOutputPath>
 
     <!--
       Official build:
@@ -94,7 +93,7 @@
     <GitVersionBaseDirectory>$(MSBuildThisFileDirectory)</GitVersionBaseDirectory>
     <!-- This tells XliffTasks to produce updated XLF files when building a project. -->
     <!-- We set this off in CI so that the CI build will fail if updated XLF files were not committed to the repo. -->
-    <!-- https://github.com/dotnet/xliff-tasks/tree/main#using-microsoftdotnetxlifftasks -->
+    <!-- https://github.com/dotnet/arcade/blob/main/src/Microsoft.DotNet.XliffTasks/README.md#using-microsoftdotnetxlifftasks -->
     <UpdateXlfOnBuild Condition="'$(CIBuild)' != 'true'">true</UpdateXlfOnBuild>
   </PropertyGroup>
 

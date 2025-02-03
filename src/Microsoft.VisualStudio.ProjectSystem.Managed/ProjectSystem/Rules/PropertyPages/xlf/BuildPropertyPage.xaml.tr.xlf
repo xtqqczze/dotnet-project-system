@@ -72,6 +72,36 @@
         <target state="translated">Belge dosyası</target>
         <note />
       </trans-unit>
+      <trans-unit id="BoolProperty|IsAotCompatible|Description">
+        <source>Indicates that the library project is AOT compatible.</source>
+        <target state="translated">Kitaplık projesinin AOT uyumlu olduğunu belirtir.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="BoolProperty|IsAotCompatible|DisplayName">
+        <source>AOT Compatible</source>
+        <target state="translated">AOT Uyumlu</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="BoolProperty|IsPublishable|Description">
+        <source>Allows the "Publish" target to run. This property only affects processes that use .*proj files and "Publish" target, such as "dotnet publish" command. The default value is true.</source>
+        <target state="translated">"Yayınla" hedefinin çalıştırılmasına izin verir. Bu özellik yalnızca .*proj dosyalarını ve "dotnet yayımlama" komutu gibi "Yayınlama" hedefini kullanan işlemleri etkiler. Varsayılan değer doğrudur.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="BoolProperty|IsPublishable|DisplayName">
+        <source>Publishing</source>
+        <target state="translated">Yayımlama</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="BoolProperty|IsTrimmable|Description">
+        <source>Marks your assembly as trimmable and enables trim warnings for that project.</source>
+        <target state="translated">Bütünleştirilmiş kodlarınızı kırpılabilir olarak işaretleyip bu proje için kırpma uyarılarını sağlar.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="BoolProperty|IsTrimmable|DisplayName">
+        <source>Trimmable</source>
+        <target state="translated">Kırpılabilir</target>
+        <note />
+      </trans-unit>
       <trans-unit id="BoolProperty|Optimize|Description">
         <source>Enable compiler optimizations for smaller, faster, and more efficient output.</source>
         <target state="translated">Daha küçük, daha hızlı ve daha verimli çıktılar için derleyici iyileştirmelerini etkinleştirin.</target>
@@ -97,6 +127,16 @@
         <target state="translated">32 biti tercih et</target>
         <note />
       </trans-unit>
+      <trans-unit id="BoolProperty|PreferNativeArm64|Description">
+        <source>Run on native hardware platform by default.</source>
+        <target state="translated">Varsayılan olarak yerel donanım platformunda çalıştırın.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="BoolProperty|PreferNativeArm64|DisplayName">
+        <source>Prefer Native ARM64</source>
+        <target state="translated">Yerel ARM64'ü tercih et</target>
+        <note />
+      </trans-unit>
       <trans-unit id="BoolProperty|ProduceReferenceAssembly|Description">
         <source>Produce a reference assembly containing the public API of the project.</source>
         <target state="translated">Projenin genel API'sini içeren bir başvuru bütünleştirilmiş kodu oluşturun.</target>
@@ -105,6 +145,26 @@
       <trans-unit id="BoolProperty|ProduceReferenceAssembly|DisplayName">
         <source>Reference assembly</source>
         <target state="translated">Başvuru bütünleştirilmiş kodu</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="BoolProperty|PublishAot|Description">
+        <source>Enable Ahead-of-Time (AOT) Compilation to generate native machine code for your .NET Core application during the publish process for improved performance and reduced startup time.</source>
+        <target state="translated">Daha iyi performans ve daha düşük başlatma süresi için yayımlama işlemi sırasında .NET Core uygulamanız için yerel makine kodu oluşturmak için Zamanından Önce (AOT) Derlemeyi etkinleştirin.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="BoolProperty|PublishAot|DisplayName">
+        <source>Publish native AOT</source>
+        <target state="translated">Yerel AOT yayımla</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="BoolProperty|PublishTrimmed|Description">
+        <source>Controls whether trimming is enabled during publish.</source>
+        <target state="translated">Yayınlama sırasında kırpmanın etkin olup olmadığını kontrol eder.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="BoolProperty|PublishTrimmed|DisplayName">
+        <source>Publish trimmed</source>
+        <target state="translated">Kırpılmış yayınla</target>
         <note />
       </trans-unit>
       <trans-unit id="BoolProperty|SignAssembly|Description">
@@ -170,6 +230,16 @@
       <trans-unit id="Category|Output|DisplayName">
         <source>Output</source>
         <target state="translated">Çıkış</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Category|Publish|Description">
+        <source>Configures options in the publish process.</source>
+        <target state="translated">Yayımlama işlemindeki seçenekleri yapılandırır.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Category|Publish|DisplayName">
+        <source>Publish</source>
+        <target state="translated">Yayımla</target>
         <note />
       </trans-unit>
       <trans-unit id="Category|StrongNaming|Description">
@@ -397,6 +467,11 @@
         <target state="translated">7 - C# 11'dan uyarılar</target>
         <note />
       </trans-unit>
+      <trans-unit id="EnumValue|WarningLevel.8|DisplayName">
+        <source>8 - Warnings from C# 13</source>
+        <target state="translated">8 - C# 13'ten uyarılar</target>
+        <note />
+      </trans-unit>
       <trans-unit id="EnumValue|WarningLevel.9999|DisplayName">
         <source>9999 - All warnings</source>
         <target state="translated">9999 - Tüm uyarılar</target>
@@ -415,16 +490,6 @@
       <trans-unit id="StringProperty|AssemblyOriginatorKeyFile|DisplayName">
         <source>Strong name key file</source>
         <target state="translated">Tanımlayıcı ad anahtar dosyası</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="StringProperty|BaseIntermediateOutputPath|Description">
-        <source>Specifies the base location for the project's intermediate output during build. Subfolders will be appended to this path to differentiate project configuration.</source>
-        <target state="translated">Derleme sırasında projenin ara çıkışı için temel konumu belirtir. Proje yapılandırmasını ayırt etmek için bu yola alt klasörler eklenir.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="StringProperty|BaseIntermediateOutputPath|DisplayName">
-        <source>Base intermediate output path</source>
-        <target state="translated">Temel ara çıkış yolu</target>
         <note />
       </trans-unit>
       <trans-unit id="StringProperty|BaseOutputPath|Description">

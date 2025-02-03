@@ -1,45 +1,33 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. See the LICENSE.md file in the project root for more information.
 
-using Microsoft.VisualStudio.ProjectSystem.PackageRestore;
+namespace NuGet.SolutionRestoreManager;
 
-namespace NuGet.SolutionRestoreManager
+internal class IVsSolutionRestoreServiceFactory
 {
-    internal static class IVsSolutionRestoreServiceFactory
+    private readonly Mock<IVsSolutionRestoreService5> _mock = new();
+
+    internal IVsSolutionRestoreServiceFactory WithNominateProjectAsync(Action<string, IVsProjectRestoreInfo3, CancellationToken> action)
     {
-        public static IVsSolutionRestoreService3 Create()
-        {
-            return Mock.Of<IVsSolutionRestoreService3>();
-        }
+        _mock.Setup(s => s.NominateProjectAsync(It.IsAny<string>(), It.IsAny<IVsProjectRestoreInfo3>(), It.IsAny<CancellationToken>()))
+             .Callback(action)
+             .ReturnsAsync(true);
 
-        internal static IVsSolutionRestoreService3 ImplementNominateProjectAsync(Action<string, IVsProjectRestoreInfo2, CancellationToken> action)
-        {
-            var mock = new Mock<IVsSolutionRestoreService3>();
-            mock.Setup(s => s.NominateProjectAsync(It.IsAny<string>(), It.IsAny<IVsProjectRestoreInfo2>(), It.IsAny<CancellationToken>()))
-                .Callback(action)
-                .ReturnsAsync(true);
-
-            return mock.Object;
-        }
+        return this;
     }
-}
 
-namespace Microsoft.VisualStudio.ProjectSystem.VS.PackageRestore
-{ 
-    internal static class INuGetRestoreServiceFactory
+    internal IVsSolutionRestoreServiceFactory WithRegisterRestoreInfoSourceAsync(Action<IVsProjectRestoreInfoSource, CancellationToken>? registerAction = null)
     {
-        public static INuGetRestoreService Create()
+        if (registerAction is not null)
         {
-            return Mock.Of<INuGetRestoreService>();
+            _mock.Setup(s => s.RegisterRestoreInfoSourceAsync(It.IsAny<IVsProjectRestoreInfoSource>(), It.IsAny<CancellationToken>()))
+                 .Callback(registerAction);
         }
-        
-        internal static INuGetRestoreService ImplementNominateProjectAsync(Action<ProjectRestoreInfo, IReadOnlyCollection<PackageRestoreConfiguredInput>, CancellationToken> action)
-        {
-            var mock = new Mock<INuGetRestoreService>();
-            mock.Setup(s => s.NominateAsync(It.IsAny<ProjectRestoreInfo>(), It.IsAny<IReadOnlyCollection<PackageRestoreConfiguredInput>>(), It.IsAny<CancellationToken>()))
-                .Callback(action)
-                .ReturnsAsync(true);
 
-            return mock.Object;
-        }
+        return this;
+    }
+
+    internal IVsSolutionRestoreService5 Build()
+    {
+        return _mock.Object;
     }
 }

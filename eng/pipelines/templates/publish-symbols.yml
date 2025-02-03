@@ -4,11 +4,6 @@ jobs:
 - job: PublishSymbols
   displayName: Publish Symbols
   timeoutInMinutes: 10
-  pool:
-    # Publishing symbols requires a specific agent pool for access to our file share. Defining the pool information within the job allows us to use that agent pool only for symbol publishing.
-    # Agent Queue: https://devdiv.visualstudio.com/DevDiv/_settings/agentqueues?queueId=3316&view=jobs
-    name: VSEng-ReleasePool-1ES
-    demands: Cmd
   steps:
 
   ###################################################################################################################################################################
@@ -55,18 +50,14 @@ jobs:
       SymbolServerType: TeamServices
       SymbolsProduct: '.NET Project System'
       SymbolsVersion: $(Build.BuildNumber)
-      SymbolsArtifactName: Symbols
     # This is a non-critical task, so don't fail the build if it fails.
     continueOnError: true
 
   # The symbols archived here are checked as part of the VS Insertion PR to ensure they are available.
-  # https://devdiv.visualstudio.com/DevDiv/_wiki/wikis/DevDiv.wiki/672/Archive-Symbols-with-Symweb
-  - task: MicroBuildArchiveSymbols@1
+  # https://devdiv.visualstudio.com/DevDiv/_wiki/wikis/DevDiv.wiki/34315/Archiving-Symbols
+  - task: MicroBuildArchiveSymbols@5
     displayName: Publish to Symweb
     inputs:
       SymbolsFeatureName: MS.VS.ProjectSystem.Managed
-      SymbolsSymwebProject: VS
-      # This value is provided from the DotNet-Project-System variable group, defined in the stage variables.
-      SymbolsUncPath: $(SymbolsUncPath)
-      SymbolsEmailContacts: dotnetdevexproj
+      SymbolsProject: VS
       SymbolsAgentPath: $(Pipeline.Workspace)/$(Build.BuildNumber)

@@ -52,6 +52,16 @@
         <target state="translated">首选 32 位</target>
         <note />
       </trans-unit>
+      <trans-unit id="BoolProperty|PreferNativeArm64|Description">
+        <source>Run on native hardware platform by default.</source>
+        <target state="translated">默认情况下在本机硬件平台上运行。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="BoolProperty|PreferNativeArm64|DisplayName">
+        <source>Prefer Native ARM64</source>
+        <target state="translated">首选本机 ARM64</target>
+        <note />
+      </trans-unit>
       <trans-unit id="BoolProperty|PublishDocumentationFile|Description">
         <source>When this property is true, the XML documentation file for the project, if one is generated, is included in the publish output for the project. This property defaults to true.</source>
         <target state="translated">当此属性为 true 时，项目的 XML 文档文件如果生成，则包含在项目的发布输出中。此属性默认为 true。</target>
@@ -294,53 +304,53 @@
       </trans-unit>
       <trans-unit id="EnumValue|GenerateSerializationAssemblies.Off|DisplayName">
         <source>Off</source>
-        <target state="translated">关</target>
+        <target state="translated">Off</target>
         <note />
       </trans-unit>
       <trans-unit id="EnumValue|GenerateSerializationAssemblies.On|DisplayName">
         <source>On</source>
-        <target state="translated">开</target>
+        <target state="translated">On</target>
         <note />
       </trans-unit>
       <trans-unit id="EnumValue|OptionCompare.Binary|DisplayName">
         <source>Binary</source>
-        <target state="translated">二进制</target>
-        <note />
+        <target state="new">Binary</target>
+        <note>{Locked}</note>
       </trans-unit>
       <trans-unit id="EnumValue|OptionCompare.Text|DisplayName">
         <source>Text</source>
-        <target state="translated">文本</target>
-        <note />
+        <target state="new">Text</target>
+        <note>{Locked}</note>
       </trans-unit>
       <trans-unit id="EnumValue|OptionExplicit.Off|DisplayName">
         <source>Off</source>
-        <target state="translated">关</target>
-        <note />
+        <target state="new">Off</target>
+        <note>{Locked}</note>
       </trans-unit>
       <trans-unit id="EnumValue|OptionExplicit.On|DisplayName">
         <source>On</source>
-        <target state="translated">开</target>
-        <note />
+        <target state="new">On</target>
+        <note>{Locked}</note>
       </trans-unit>
       <trans-unit id="EnumValue|OptionInfer.Off|DisplayName">
         <source>Off</source>
-        <target state="translated">关</target>
-        <note />
+        <target state="new">Off</target>
+        <note>{Locked}</note>
       </trans-unit>
       <trans-unit id="EnumValue|OptionInfer.On|DisplayName">
         <source>On</source>
-        <target state="translated">开</target>
-        <note />
+        <target state="new">On</target>
+        <note>{Locked}</note>
       </trans-unit>
       <trans-unit id="EnumValue|OptionStrict.Off|DisplayName">
         <source>Off</source>
-        <target state="translated">关</target>
-        <note />
+        <target state="new">Off</target>
+        <note>{Locked}</note>
       </trans-unit>
       <trans-unit id="EnumValue|OptionStrict.On|DisplayName">
         <source>On</source>
-        <target state="translated">开</target>
-        <note />
+        <target state="new">On</target>
+        <note>{Locked}</note>
       </trans-unit>
       <trans-unit id="EnumValue|RunPostBuildEvent.Always|DisplayName">
         <source>Always</source>
@@ -364,7 +374,7 @@
       </trans-unit>
       <trans-unit id="EnumValue|WarningSeverity.DisableAll|DisplayName">
         <source>Disable all warnings</source>
-        <target state="translated">禁用所有警告。</target>
+        <target state="translated">禁用所有警告</target>
         <note />
       </trans-unit>
       <trans-unit id="EnumValue|WarningSeverity.Individual|DisplayName">
@@ -388,8 +398,8 @@
         <note />
       </trans-unit>
       <trans-unit id="StringProperty|DefineConstants|Description">
-        <source>Specifies custom conditional compilation constants for your application.</source>
-        <target state="translated">指定应用程序的自定义条件编译常量。</target>
+        <source>Specifies custom conditional compilation constants for your application. Note that values are optional, for the optional behavior leave the value blank. If the value is a string, please add quotation marks around it.</source>
+        <target state="translated">指定应用程序的自定义条件编译常量。请注意，值是可选的，对于可选行为，请将值留空。如果值是字符串，请在它两边添加引号。</target>
         <note />
       </trans-unit>
       <trans-unit id="StringProperty|DefineConstants|DisplayName">

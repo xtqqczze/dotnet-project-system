@@ -1,61 +1,53 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. See the LICENSE.md file in the project root for more information.
 
-using Microsoft.Internal.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Composition;
 using Microsoft.VisualStudio.Telemetry;
 
-namespace Microsoft.VisualStudio.ProjectSystem.VS.Build.Diagnostics
+namespace Microsoft.VisualStudio.ProjectSystem.VS.Build.Diagnostics;
+
+/// <summary>
+///   Reports incremental build failures via telemetry.
+/// </summary>
+[Export(typeof(IIncrementalBuildFailureReporter))]
+[AppliesTo(ProjectCapabilities.AlwaysApplicable)]
+internal sealed class IncrementalBuildFailureTelemetryReporter : IIncrementalBuildFailureReporter
 {
-    /// <summary>
-    ///   Reports incremental build failures via telemetry.
-    /// </summary>
-    [Export(typeof(IIncrementalBuildFailureReporter))]
-    [AppliesTo(ProjectCapabilities.AlwaysApplicable)]
-    internal sealed class IncrementalBuildFailureTelemetryReporter : IIncrementalBuildFailureReporter
+    private readonly IProjectSystemOptions _projectSystemOptions;
+    private bool _hasBeenReported;
+
+    [ImportingConstructor]
+    public IncrementalBuildFailureTelemetryReporter(
+        UnconfiguredProject _, // scoping
+        IProjectSystemOptions projectSystemOptions)
     {
-        private readonly UnconfiguredProject _project;
-        private readonly IVsUIService<SVsFeatureFlags, IVsFeatureFlags> _featureFlagsService;
-        private bool _hasBeenReported;
+        _projectSystemOptions = projectSystemOptions;
+    }
 
-        [ImportingConstructor]
-        public IncrementalBuildFailureTelemetryReporter(
-            UnconfiguredProject project,
-            IVsUIService<SVsFeatureFlags, IVsFeatureFlags> featureFlagsService)
+    public ValueTask<bool> IsEnabledAsync(CancellationToken cancellationToken)
+    {
+        if (_hasBeenReported)
         {
-            _project = project;
-            _featureFlagsService = featureFlagsService;
+            // Only report once per project. If we have previously reported this,
+            // return false.
+            return new ValueTask<bool>(false);
         }
 
-        public async Task<bool> IsEnabledAsync(CancellationToken cancellationToken)
-        {
-            if (_hasBeenReported)
-            {
-                // Only report once per project. If we have previously reported this,
-                // return false.
-                return false;
-            }
+        return _projectSystemOptions.IsIncrementalBuildFailureTelemetryEnabledAsync(cancellationToken);
+    }
 
-            await _project.Services.ThreadingPolicy.SwitchToUIThread(cancellationToken);
+    public Task ReportFailureAsync(string failureReason, string failureDescription, TimeSpan checkDuration, CancellationToken cancellationToken)
+    {
+        Assumes.False(_hasBeenReported);
 
-            IVsFeatureFlags featureFlagsService = _featureFlagsService.Value;
+        var telemetryEvent = new TelemetryEvent(TelemetryEventName.IncrementalBuildValidationFailure);
 
-            return featureFlagsService.IsFeatureEnabled(FeatureFlagNames.EnableIncrementalBuildFailureTelemetry, defaultValue: false);
-        }
+        telemetryEvent.Properties.Add(TelemetryPropertyName.IncrementalBuildValidation.FailureReason, failureReason);
+        telemetryEvent.Properties.Add(TelemetryPropertyName.IncrementalBuildValidation.DurationMillis, checkDuration);
 
-        public Task ReportFailureAsync(string failureReason, string failureDescription, TimeSpan checkDuration, CancellationToken cancellationToken)
-        {
-            Assumes.False(_hasBeenReported);
+        TelemetryService.DefaultSession.PostEvent(telemetryEvent);
 
-            var telemetryEvent = new TelemetryEvent(TelemetryEventName.IncrementalBuildValidationFailure);
+        _hasBeenReported = true;
 
-            telemetryEvent.Properties.Add(TelemetryPropertyName.IncrementalBuildValidation.FailureReason, failureReason);
-            telemetryEvent.Properties.Add(TelemetryPropertyName.IncrementalBuildValidation.DurationMillis, checkDuration);
-
-            TelemetryService.DefaultSession.PostEvent(telemetryEvent);
-
-            _hasBeenReported = true;
-
-            return Task.CompletedTask;
-        }
+        return Task.CompletedTask;
     }
 }

@@ -52,6 +52,16 @@
         <target state="translated">32 ビットを優先</target>
         <note />
       </trans-unit>
+      <trans-unit id="BoolProperty|PreferNativeArm64|Description">
+        <source>Run on native hardware platform by default.</source>
+        <target state="translated">既定では、ネイティブ ハードウェア プラットフォームで実行します。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="BoolProperty|PreferNativeArm64|DisplayName">
+        <source>Prefer Native ARM64</source>
+        <target state="translated">ネイティブ ARM64 を優先する</target>
+        <note />
+      </trans-unit>
       <trans-unit id="BoolProperty|PublishDocumentationFile|Description">
         <source>When this property is true, the XML documentation file for the project, if one is generated, is included in the publish output for the project. This property defaults to true.</source>
         <target state="translated">このプロパティが true の場合、プロジェクトの XML ドキュメント ファイル (生成された場合) は、プロジェクトの発行出力に含まれます。このプロパティの既定値は true です。</target>
@@ -304,43 +314,43 @@
       </trans-unit>
       <trans-unit id="EnumValue|OptionCompare.Binary|DisplayName">
         <source>Binary</source>
-        <target state="translated">バイナリ</target>
-        <note />
+        <target state="new">Binary</target>
+        <note>{Locked}</note>
       </trans-unit>
       <trans-unit id="EnumValue|OptionCompare.Text|DisplayName">
         <source>Text</source>
-        <target state="translated">テキスト</target>
-        <note />
+        <target state="new">Text</target>
+        <note>{Locked}</note>
       </trans-unit>
       <trans-unit id="EnumValue|OptionExplicit.Off|DisplayName">
         <source>Off</source>
-        <target state="translated">オフ</target>
-        <note />
+        <target state="new">Off</target>
+        <note>{Locked}</note>
       </trans-unit>
       <trans-unit id="EnumValue|OptionExplicit.On|DisplayName">
         <source>On</source>
-        <target state="translated">オン</target>
-        <note />
+        <target state="new">On</target>
+        <note>{Locked}</note>
       </trans-unit>
       <trans-unit id="EnumValue|OptionInfer.Off|DisplayName">
         <source>Off</source>
-        <target state="translated">オフ</target>
-        <note />
+        <target state="new">Off</target>
+        <note>{Locked}</note>
       </trans-unit>
       <trans-unit id="EnumValue|OptionInfer.On|DisplayName">
         <source>On</source>
-        <target state="translated">オン</target>
-        <note />
+        <target state="new">On</target>
+        <note>{Locked}</note>
       </trans-unit>
       <trans-unit id="EnumValue|OptionStrict.Off|DisplayName">
         <source>Off</source>
-        <target state="translated">オフ</target>
-        <note />
+        <target state="new">Off</target>
+        <note>{Locked}</note>
       </trans-unit>
       <trans-unit id="EnumValue|OptionStrict.On|DisplayName">
         <source>On</source>
-        <target state="translated">オン</target>
-        <note />
+        <target state="new">On</target>
+        <note>{Locked}</note>
       </trans-unit>
       <trans-unit id="EnumValue|RunPostBuildEvent.Always|DisplayName">
         <source>Always</source>
@@ -388,8 +398,8 @@
         <note />
       </trans-unit>
       <trans-unit id="StringProperty|DefineConstants|Description">
-        <source>Specifies custom conditional compilation constants for your application.</source>
-        <target state="translated">アプリケーションのカスタム条件付きコンパイル定数を指定します。</target>
+        <source>Specifies custom conditional compilation constants for your application. Note that values are optional, for the optional behavior leave the value blank. If the value is a string, please add quotation marks around it.</source>
+        <target state="translated">アプリケーションのカスタム条件付きコンパイル定数を指定します。値はオプションであり、オプションの動作では値を空白のままにすることに注意してください。値が文字列の場合は、値を引用符で囲んでください。</target>
         <note />
       </trans-unit>
       <trans-unit id="StringProperty|DefineConstants|DisplayName">

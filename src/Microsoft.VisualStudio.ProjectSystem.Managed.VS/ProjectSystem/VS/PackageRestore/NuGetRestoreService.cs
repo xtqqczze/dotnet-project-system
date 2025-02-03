@@ -13,8 +13,7 @@ namespace Microsoft.VisualStudio.ProjectSystem.VS.PackageRestore;
 internal class NuGetRestoreService : OnceInitializedOnceDisposed, INuGetRestoreService, IProjectDynamicLoadComponent, IVsProjectRestoreInfoSource
 {
     private readonly UnconfiguredProject _project;
-    private readonly IVsSolutionRestoreService3 _solutionRestoreService3;
-    private readonly IVsSolutionRestoreService4 _solutionRestoreService4;
+    private readonly IVsSolutionRestoreService5 _solutionRestoreService;
     private readonly IProjectAsynchronousTasksService _projectAsynchronousTasksService;
     private readonly IProjectFaultHandlerService _faultHandlerService;
 
@@ -35,14 +34,12 @@ internal class NuGetRestoreService : OnceInitializedOnceDisposed, INuGetRestoreS
     [ImportingConstructor]
     public NuGetRestoreService(
         UnconfiguredProject project,
-        IVsSolutionRestoreService3 solutionRestoreService3,
-        IVsSolutionRestoreService4 solutionRestoreService4,
+        IVsSolutionRestoreService5 solutionRestoreService,
         [Import(ExportContractNames.Scopes.UnconfiguredProject)] IProjectAsynchronousTasksService projectAsynchronousTasksService,
         IProjectFaultHandlerService faultHandlerService)
     {
         _project = project;
-        _solutionRestoreService3 = solutionRestoreService3;
-        _solutionRestoreService4 = solutionRestoreService4;
+        _solutionRestoreService = solutionRestoreService;
         _projectAsynchronousTasksService = projectAsynchronousTasksService;
         _faultHandlerService = faultHandlerService;
     }
@@ -52,9 +49,9 @@ internal class NuGetRestoreService : OnceInitializedOnceDisposed, INuGetRestoreS
         try
         {
             _restoring = true;
-            
-            Task<bool> restoreOperation = _solutionRestoreService3.NominateProjectAsync(_project.FullPath, new VsProjectRestoreInfo(restoreData), cancellationToken);
-            
+
+            Task<bool> restoreOperation = _solutionRestoreService.NominateProjectAsync(_project.FullPath, new VsProjectRestoreInfo(restoreData), cancellationToken);
+
             SaveNominatedConfiguredVersions(inputVersions);
 
             return await restoreOperation;
@@ -202,7 +199,7 @@ internal class NuGetRestoreService : OnceInitializedOnceDisposed, INuGetRestoreS
         {
             return true;
         }
-        
+
         if (_savedNominatedConfiguredVersion.Count == 1)
         {
             return false;
@@ -229,7 +226,7 @@ internal class NuGetRestoreService : OnceInitializedOnceDisposed, INuGetRestoreS
 #pragma warning disable RS0030 // Do not used banned APIs
         var registerRestoreInfoSourceTask = Task.Run(() =>
         {
-            return _solutionRestoreService4.RegisterRestoreInfoSourceAsync(this, _projectAsynchronousTasksService.UnloadCancellationToken);
+            return _solutionRestoreService.RegisterRestoreInfoSourceAsync(this, _projectAsynchronousTasksService.UnloadCancellationToken);
         });
 #pragma warning restore RS0030 // Do not used banned APIs
 

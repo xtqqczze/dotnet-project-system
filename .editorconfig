@@ -35,9 +35,6 @@ indent_size = 2
 [*.json]
 indent_size = 2
 
-[*.groovy]
-indent_size = 2
-
 # Dotnet code style settings:
 [*.{cs,vb}]
 # Sort using and Import directives with System.* appearing first
@@ -135,6 +132,9 @@ dotnet_naming_style.pascal_case_and_prefix_with_I_style.capitalization          
 
 # CSharp code style settings:
 [*.cs]
+
+# Use file-scoped namespaces
+csharp_style_namespace_declarations = file_scoped:error
 
 # Prefer "var" only when the type is apparent
 csharp_style_var_for_built_in_types = false:suggestion
@@ -234,6 +234,7 @@ dotnet_diagnostic.CA1821.severity = none        # Remove empty Finalizers
 dotnet_diagnostic.CA1823.severity = warning     # Avoid unused private fields
 dotnet_diagnostic.CA1824.severity = none        # Mark assemblies with NeutralResourcesLanguageAttribute
 dotnet_diagnostic.CA1851.severity = warning     # Detect multiple enumeration
+dotnet_diagnostic.CA1852.severity = warning     # Seal internal types
 dotnet_diagnostic.CA2200.severity = none        # Rethrow to preserve stack details
 
 # Microsoft.NetCore.Analyzers
@@ -353,7 +354,7 @@ dotnet_diagnostic.RS0012.severity = warning
 
 # System.Runtime.Analyzers
 dotnet_diagnostic.CA1305.severity = none        # Specify IFormatProvider
-dotnet_diagnostic.CA1307.severity = none        # Specify StringComparison
+dotnet_diagnostic.CA1307.severity = suggestion  # Specify StringComparison
 dotnet_diagnostic.CA1308.severity = none        # Normalize strings to uppercase
 dotnet_diagnostic.CA1810.severity = none        # Initialize reference type static fields inline
 dotnet_diagnostic.CA1816.severity = none        # Dispose methods should call SuppressFinalize
@@ -386,12 +387,21 @@ dotnet_diagnostic.IDE0005.severity = warning      # Using directive is unnecessa
 dotnet_diagnostic.IDE0030.severity = warning      # Use coalesce expression (nullable)            int? y = x.HasValue ? x.Value : 0                   int? y = x ?? 0;
 dotnet_diagnostic.IDE0030WithoutSuggestion.severity = error
 dotnet_diagnostic.IDE0031.severity = warning      # Use null propagation (nullable)
+dotnet_diagnostic.IDE0051.severity = warning      # Private member unused
+dotnet_diagnostic.IDE0052.severity = warning      # Remove unread private members
+dotnet_diagnostic.IDE0059.severity = error        # Unnecessary assignment
 dotnet_diagnostic.IDE0079.severity = warning      # Unused suppresion
 dotnet_diagnostic.IDE0083.severity = warning      # Use pattern matching
 dotnet_diagnostic.IDE0084.severity = warning      # Use IsNot
 dotnet_diagnostic.IDE0090.severity = warning      # Use new(...)
+dotnet_diagnostic.IDE0220.severity = warning      # Add explicit cast
+dotnet_diagnostic.IDE0250.severity = warning      # Struct can be made 'readonly'
+dotnet_diagnostic.IDE0251.severity = suggestion   # Struct methods can be made 'readonly'
+dotnet_diagnostic.IDE0270.severity = suggestion   # Use coalesce expression
 dotnet_diagnostic.IDE1006.severity = warning      # Naming styles                                 Task Open()                                         Task OpenAsync()
 dotnet_diagnostic.IDE1006WithoutSuggestion.severity = suggestion
+
+dotnet_style_prefer_foreach_explicit_cast_in_source = always    # IDE0220: Add explicit cast
 
 # Microsoft.VisualStudio.Threading.Analyzers
 # https://github.com/microsoft/vs-threading/blob/main/doc/analyzers/index.md
@@ -431,3 +441,21 @@ dotnet_diagnostic.IDE2006.severity = warning    # Allow blank line after token i
 # Reduce severity for some VB rules where the risks of changes outweight the benefit
 [*.{vb}]
 dotnet_diagnostic.IDE0031.severity = suggestion   # Use null propagation (nullable)
+dotnet_diagnostic.CA1307.severity = suggestion    # Specify StringComparison
+
+# NETCOREUNDONE: Should be removed when obsolete System.Xaml types are moved from Microsoft.VisualStudio.ProjectSystem.XamlTypes into official package
+# Disabling warning for C# files generated from xaml rules
+[artifacts/*/obj/Microsoft.VisualStudio.ProjectSystem.Managed/net8.0/*.cs]
+# CS0618: Type or member is obsolete
+dotnet_diagnostic.CS0618.severity = silent
+
+
+# Verify settings
+[*.{received,verified}.{txt,xml,json}]
+charset = "utf-8-bom"
+end_of_line = lf
+indent_size = unset
+indent_style = unset
+insert_final_newline = false
+tab_width = unset
+trim_trailing_whitespace = false

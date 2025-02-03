@@ -20,6 +20,10 @@
   <StringProperty Name="CentralPackageVersionOverrideEnabled"
                   ReadOnly="True"
                   Visible="False" />
+                  
+  <StringProperty Name="CentralPackageFloatingVersionsEnabled"
+                  ReadOnly="True"
+                  Visible="False" />
 
   <StringProperty Name="CLRSupport"
                   ReadOnly="True"
@@ -49,6 +53,10 @@
                   ReadOnly="True"
                   Visible="False" />
 
+  <StringProperty Name="NETCoreSdkVersion"
+                  ReadOnly="True"
+                  Visible="False" />
+
   <StringProperty Name="NoWarn"
                   ReadOnly="True"
                   Visible="False" />
@@ -58,6 +66,10 @@
                   Visible="False" />
 
   <StringProperty Name="NuGetAuditLevel"
+                  ReadOnly="True"
+                  Visible="False" />
+
+  <StringProperty Name="NuGetAuditMode"
                   ReadOnly="True"
                   Visible="False" />
 
@@ -93,6 +105,10 @@
                   ReadOnly="True"
                   Visible="False" />
 
+  <StringProperty Name="RestoreEnablePackagePruning"
+                  ReadOnly="True"
+                  Visible="False" />
+
   <StringProperty Name="RestoreFallbackFolders"
                   ReadOnly="True"
                   Visible="False" />
@@ -113,6 +129,10 @@
                   ReadOnly="True"
                   Visible="False" />
 
+  <StringProperty Name="RestoreUseLegacyDependencyResolver"
+                  ReadOnly="True"
+                  Visible="False" />
+
   <StringProperty Name="RuntimeIdentifier"
                   ReadOnly="True"
                   Visible="False" />
@@ -126,6 +146,14 @@
                   Visible="False" />
 
   <StringProperty Name="NuGetTargetMoniker"
+                  ReadOnly="True"
+                  Visible="False" />
+
+  <StringProperty Name="SdkAnalysisLevel"
+                  ReadOnly="True"
+                  Visible="False" />
+
+  <StringProperty Name="UsingMicrosoftNETSdk"
                   ReadOnly="True"
                   Visible="False" />
 
@@ -195,6 +223,10 @@
                   Visible="False" />
 
   <StringProperty Name="WarningsNotAsErrors"
+                  ReadOnly="True"
+                  Visible="False" />
+
+  <StringProperty Name="WindowsTargetPlatformMinVersion"
                   ReadOnly="True"
                   Visible="False" />
 
