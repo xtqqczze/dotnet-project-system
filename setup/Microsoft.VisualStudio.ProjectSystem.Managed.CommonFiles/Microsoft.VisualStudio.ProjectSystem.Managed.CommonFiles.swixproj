@@ -4,8 +4,9 @@
   <Import Project="..\..\eng\imports\HostAgnostic.props" />
 
   <PropertyGroup>
+    <TargetFramework>net472</TargetFramework>
     <!-- This allows passing in MSBuild properties for substitution in SWR files. -->
-    <PackagePreprocessorDefinitions>$(PackagePreprocessorDefinitions);VisualStudioXamlRulesDir=$(VisualStudioXamlRulesDir)</PackagePreprocessorDefinitions>
+    <PackagePreprocessorDefinitions>$(PackagePreprocessorDefinitions);VisualStudioXamlRulesDir=$(VisualStudioXamlRulesDir);VisualStudioExtensionSetupDir=$(VisualStudioExtensionSetupDir)</PackagePreprocessorDefinitions>
   </PropertyGroup>
 
   <ItemGroup>

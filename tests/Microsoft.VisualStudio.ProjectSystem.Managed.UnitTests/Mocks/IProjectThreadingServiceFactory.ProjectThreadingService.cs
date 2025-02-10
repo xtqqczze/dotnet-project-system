@@ -3,74 +3,59 @@
 using Microsoft.VisualStudio.Threading;
 using Task = System.Threading.Tasks.Task;
 
-namespace Microsoft.VisualStudio.ProjectSystem
+namespace Microsoft.VisualStudio.ProjectSystem;
+
+internal partial class IProjectThreadingServiceFactory
 {
-    internal partial class IProjectThreadingServiceFactory
+    private class ProjectThreadingService(bool verifyOnUIThread = true) : IProjectThreadingService
     {
-        private class ProjectThreadingService : IProjectThreadingService
+        public JoinableTaskContextNode JoinableTaskContext { get; } = new JoinableTaskContextNode(new JoinableTaskContext());
+
+        public JoinableTaskFactory JoinableTaskFactory => JoinableTaskContext.Factory;
+
+        public bool IsOnMainThread => !verifyOnUIThread || JoinableTaskContext.IsOnMainThread;
+
+        public void ExecuteSynchronously(Func<Task> asyncAction)
         {
-            private readonly bool _verifyOnUIThread;
+            JoinableTaskFactory.Run(asyncAction);
+        }
 
-            public ProjectThreadingService(bool verifyOnUIThread = true) => _verifyOnUIThread = verifyOnUIThread;
+        public T ExecuteSynchronously<T>(Func<Task<T>> asyncAction)
+        {
+            return JoinableTaskFactory.Run(asyncAction);
+        }
 
-#pragma warning disable VSSDK005
-            public JoinableTaskContextNode JoinableTaskContext { get; } = new JoinableTaskContextNode(new JoinableTaskContext());
-#pragma warning restore VSSDK005
-
-            public JoinableTaskFactory JoinableTaskFactory => JoinableTaskContext.Factory;
-
-            public bool IsOnMainThread
+        public void VerifyOnUIThread()
+        {
+            if (verifyOnUIThread && !IsOnMainThread)
             {
-                get
-                {
-                    if (!_verifyOnUIThread)
-                        return true;
-
-                    return JoinableTaskContext.IsOnMainThread;
-                }
+                throw new InvalidOperationException();
             }
+        }
 
-            public void ExecuteSynchronously(Func<Task> asyncAction)
+        public IDisposable SuppressProjectExecutionContext()
+        {
+            return DisposableObject.Instance;
+        }
+
+        public void Fork(
+            Func<Task> asyncAction,
+            JoinableTaskFactory? factory = null,
+            UnconfiguredProject? project = null,
+            ConfiguredProject? configuredProject = null,
+            ErrorReportSettings? watsonReportSettings = null,
+            ProjectFaultSeverity faultSeverity = ProjectFaultSeverity.Recoverable,
+            ForkOptions options = ForkOptions.Default)
+        {
+            JoinableTaskFactory.Run(asyncAction);
+        }
+
+        private class DisposableObject : IDisposable
+        {
+            public static IDisposable Instance { get; } = new DisposableObject();
+
+            public void Dispose()
             {
-                JoinableTaskFactory.Run(asyncAction);
-            }
-
-            public T ExecuteSynchronously<T>(Func<Task<T>> asyncAction)
-            {
-                return JoinableTaskFactory.Run(asyncAction);
-            }
-
-            public void VerifyOnUIThread()
-            {
-                if (!_verifyOnUIThread)
-                    return;
-
-                if (!IsOnMainThread)
-                    throw new InvalidOperationException();
-            }
-
-            public IDisposable SuppressProjectExecutionContext()
-            {
-                return new DisposableObject();
-            }
-
-            public void Fork(
-                Func<Task> asyncAction,
-                JoinableTaskFactory? factory = null,
-                UnconfiguredProject? project = null,
-                ConfiguredProject? configuredProject = null,
-                ErrorReportSettings? watsonReportSettings = null,
-                ProjectFaultSeverity faultSeverity = ProjectFaultSeverity.Recoverable,
-                ForkOptions options = ForkOptions.Default)
-            {
-                JoinableTaskFactory.Run(asyncAction);
-            }
-
-            private class DisposableObject : IDisposable
-            {
-                public void Dispose()
-                {
-                }
             }
         }
     }

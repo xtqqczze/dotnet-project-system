@@ -14,6 +14,7 @@
     <RootNamespace>Microsoft.VisualStudio</RootNamespace>
     <!-- Note: No idea why ProjectSystem is the AssemblyName instead of using the MSBuildProjectName of ProjectSystemSetup. -->
     <AssemblyName>ProjectSystem</AssemblyName>
+    <TargetFramework>net472</TargetFramework>
 
     <!-- VSIX -->
     <ExtensionInstallationRoot>Extensions</ExtensionInstallationRoot>
@@ -26,6 +27,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Content Include="UnifiedSettings\ManagedProjectSystem.registration.json">
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    
     <ProjectReference Include="..\..\src\Microsoft.VisualStudio.ProjectSystem.Managed.VS\Microsoft.VisualStudio.ProjectSystem.Managed.VS.csproj">
       <IncludeOutputGroupsInVSIX>BuiltProjectOutputGroup;GetCopyToOutputDirectoryItems;SatelliteDllsProjectOutputGroup;PkgdefProjectOutputGroup</IncludeOutputGroupsInVSIX>
     </ProjectReference>
@@ -54,7 +59,7 @@
   <!-- For additional info, see: https://github.com/dotnet/project-system/issues/6612 -->
   <Target Name="ExcludeLocalizedXamlFilesFromVSIX" AfterTargets="GetVsixSourceItems">
     <ItemGroup>
-      <VSIXSourceItem Remove="$(ArtifactsObjDir)$(_ManagedProjectName)\$(_ManagedProjectName).xlf\**\*.xaml" />
+      <VSIXSourceItem Remove="$(ArtifactsObjDir)$(_ManagedProjectName)\$(TargetFramework)\$(_ManagedProjectName).xlf\**\*.xaml" />
     </ItemGroup>
   </Target>
 

@@ -35,6 +35,10 @@
   <StringProperty Name="TargetRefPath"
                   ReadOnly="True"
                   Visible="False" />
+  
+  <StringProperty Name="CompilerGeneratedFilesOutputPath"
+                  ReadOnly="True"
+                  Visible="False" />
 
   <StringProperty Name="MaxSupportedLangVersion"
                   ReadOnly="True"
@@ -45,6 +49,14 @@
                   Visible="False" />
 
   <StringProperty Name="RunAnalyzersDuringLiveAnalysis"
+                  ReadOnly="True"
+                  Visible="False" />
+
+  <StringProperty Name="TargetFrameworkIdentifier"
+                  ReadOnly="True"
+                  Visible="False" />
+
+    <StringProperty Name="SolutionPath"
                   ReadOnly="True"
                   Visible="False" />
 

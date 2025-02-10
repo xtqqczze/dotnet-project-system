@@ -21,7 +21,7 @@ public class RestoreBuilderTests
             """
                 {
                     "CurrentState": {
-                        "ProjectReference": {
+                        "EvaluatedProjectReference": {
                             "Items" : {}
                         },
                         "PackageReference": {
@@ -290,13 +290,81 @@ public class RestoreBuilderTests
     }
 
     [Fact]
+    public void ToProjectRestoreInfo_SetsNuGetAuditSuppressions()
+    {
+        var update = IProjectSubscriptionUpdateFactory.FromJson(
+            """
+                {
+                    "CurrentState": {
+                        "CollectedNuGetAuditSuppressions": {
+                            "Items" : {
+                                "https://cve.contoso.com/1" : {
+                                }
+                            }
+                        }
+                    }
+                }
+                """);
+        var result = RestoreBuilder.ToProjectRestoreInfo(update.CurrentState);
+
+        var suppressions = Assert.Single(result.TargetFrameworks).NuGetAuditSuppress;
+
+        var reference1 = Assert.Single(suppressions);
+        Assert.Equal("https://cve.contoso.com/1", reference1.Name);
+    }
+
+    [Fact]
+    public void ToProjectRestoreInfo_SetsPrunePackageReferences()
+    {
+        var update = IProjectSubscriptionUpdateFactory.FromJson(
+            """
+                {
+                    "CurrentState": {
+                        "CollectedPrunePackageReference": {
+                            "Items" : {
+                                "Newtonsoft.Json" : {
+                                    "Version" : "1.0",
+                                },
+                                "System.IO" : {
+                                    "Version" : "2.0",
+                                },
+                                "Microsoft.Extensions" : {
+                                    "Version" : "3.0"
+                                }
+                            }
+                        }
+                    }
+                }
+                """);
+        var result = RestoreBuilder.ToProjectRestoreInfo(update.CurrentState);
+
+        var prunePackageReferences = Assert.Single(result.TargetFrameworks).PrunePackageReferences;
+
+        Assert.Equal(3, prunePackageReferences.Length);
+
+        var reference1 = prunePackageReferences.FirstOrDefault(r => r.Name == "Newtonsoft.Json");
+        Assert.NotNull(reference1);
+        AssertContainsProperty("Version", "1.0", reference1.Properties);
+
+        var reference2 = prunePackageReferences.FirstOrDefault(r => r.Name == "System.IO");
+        Assert.NotNull(reference2);
+        AssertContainsProperty("Version", "2.0", reference2.Properties);
+
+        var reference3 = prunePackageReferences.FirstOrDefault(r => r.Name == "Microsoft.Extensions");
+        Assert.NotNull(reference3);
+        Assert.Equal("Microsoft.Extensions", reference3.Name);
+
+        AssertContainsProperty("Version", "3.0", reference3.Properties);
+    }
+
+    [Fact]
     public void ToProjectRestoreInfo_SetsProjectReferences()
     {
         var update = IProjectSubscriptionUpdateFactory.FromJson(
             """
                 {
                     "CurrentState": {
-                        "ProjectReference": {
+                        "EvaluatedProjectReference": {
                             "Items" : {
                                 "..\\Project\\Project1.csproj" : {
                                     "ProjectFileFullPath" : "C:\\Solution\\Project\\Project1.csproj",
@@ -402,22 +470,12 @@ public class RestoreBuilderTests
         AssertContainsProperty("Version", "[4.9.4]", download2.Properties);
     }
 
-    private static void AssertContainsProperty(string name, string value, ImmutableArray<ProjectProperty> properties)
+    private static void AssertContainsProperty(string name, string value, IImmutableDictionary<string, string> properties)
     {
-        var property = properties.FirstOrDefault(p => p.Name == name);
+        var exists = properties.TryGetValue(name, out var actualValue);
 
-        Assert.NotNull(property);
-        Assert.Equal(name, property.Name);
-        Assert.Equal(value, property.Value);
-    }
-
-    private static void AssertContainsProperty(string name, string value, ImmutableArray<ReferenceProperty> properties)
-    {
-        var property = properties.FirstOrDefault(p => p.Name == name);
-
-        Assert.NotNull(property);
-        Assert.Equal(name, property.Name);
-        Assert.Equal(value, property.Value);
+        Assert.True(exists);
+        Assert.Equal(value, actualValue);
     }
 
     private static void AssertNoItems(ProjectRestoreInfo result)

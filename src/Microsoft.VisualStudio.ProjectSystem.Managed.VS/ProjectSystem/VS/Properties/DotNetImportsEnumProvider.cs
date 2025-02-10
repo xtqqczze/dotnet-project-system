@@ -80,7 +80,8 @@ internal class DotNetImportsEnumProvider : IDynamicEnumValuesProvider, IDynamicE
     {
         return (await GetNamespacesAsync()).Select(namespaceString => (IEnumValue)new PageEnumValue(new EnumValue
         {
-            Name = namespaceString, DisplayName = namespaceString
+            Name = namespaceString,
+            DisplayName = namespaceString
         })).ToImmutableList();
     }
 

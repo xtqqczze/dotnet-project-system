@@ -72,6 +72,36 @@
         <target state="translated">Dokumentationsdatei</target>
         <note />
       </trans-unit>
+      <trans-unit id="BoolProperty|IsAotCompatible|Description">
+        <source>Indicates that the library project is AOT compatible.</source>
+        <target state="translated">Gibt an, dass das Bibliotheksprojekt AOT-kompatibel ist.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="BoolProperty|IsAotCompatible|DisplayName">
+        <source>AOT Compatible</source>
+        <target state="translated">AOT-kompatibel</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="BoolProperty|IsPublishable|Description">
+        <source>Allows the "Publish" target to run. This property only affects processes that use .*proj files and "Publish" target, such as "dotnet publish" command. The default value is true.</source>
+        <target state="translated">Ermöglicht die Ausführung des Ziels "Veröffentlichen". Diese Eigenschaft wirkt sich nur auf Prozesse aus, die .*proj-Dateien und das Ziel "Veröffentlichen" verwenden, z. B. den Befehl "dotnet publish". Der Standardwert ist TRUE.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="BoolProperty|IsPublishable|DisplayName">
+        <source>Publishing</source>
+        <target state="translated">Veröffentlichung</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="BoolProperty|IsTrimmable|Description">
+        <source>Marks your assembly as trimmable and enables trim warnings for that project.</source>
+        <target state="translated">Markiert Ihre Assembly als trimmbar und aktiviert Kürzungswarnungen für dieses Projekt.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="BoolProperty|IsTrimmable|DisplayName">
+        <source>Trimmable</source>
+        <target state="translated">Trimmbar</target>
+        <note />
+      </trans-unit>
       <trans-unit id="BoolProperty|Optimize|Description">
         <source>Enable compiler optimizations for smaller, faster, and more efficient output.</source>
         <target state="translated">Compileroptimierungen für eine kleinere, schnellere und effizientere Ausgabe aktivieren.</target>
@@ -97,6 +127,16 @@
         <target state="translated">32-Bit bevorzugen</target>
         <note />
       </trans-unit>
+      <trans-unit id="BoolProperty|PreferNativeArm64|Description">
+        <source>Run on native hardware platform by default.</source>
+        <target state="translated">Standardmäßig auf nativer Hardwareplattform ausführen.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="BoolProperty|PreferNativeArm64|DisplayName">
+        <source>Prefer Native ARM64</source>
+        <target state="translated">Natives ARM64 bevorzugen</target>
+        <note />
+      </trans-unit>
       <trans-unit id="BoolProperty|ProduceReferenceAssembly|Description">
         <source>Produce a reference assembly containing the public API of the project.</source>
         <target state="translated">Hiermit wird eine Referenzassembly erstellt, die die öffentliche API des Projekts enthält.</target>
@@ -105,6 +145,26 @@
       <trans-unit id="BoolProperty|ProduceReferenceAssembly|DisplayName">
         <source>Reference assembly</source>
         <target state="translated">Referenzassembly</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="BoolProperty|PublishAot|Description">
+        <source>Enable Ahead-of-Time (AOT) Compilation to generate native machine code for your .NET Core application during the publish process for improved performance and reduced startup time.</source>
+        <target state="translated">Aktivieren Sie die AOT-Kompilierung (Ahead-of-Time), um während des Veröffentlichungsprozesses nativen Computercode für Ihre .NET Core-Anwendung zu generieren, um die Leistung zu verbessern und die Startzeit zu verringern.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="BoolProperty|PublishAot|DisplayName">
+        <source>Publish native AOT</source>
+        <target state="translated">Nativen AOT veröffentlichen</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="BoolProperty|PublishTrimmed|Description">
+        <source>Controls whether trimming is enabled during publish.</source>
+        <target state="translated">Steuert, ob das Kürzen während der Veröffentlichung aktiviert ist.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="BoolProperty|PublishTrimmed|DisplayName">
+        <source>Publish trimmed</source>
+        <target state="translated">Veröffentlichen gekürzt</target>
         <note />
       </trans-unit>
       <trans-unit id="BoolProperty|SignAssembly|Description">
@@ -170,6 +230,16 @@
       <trans-unit id="Category|Output|DisplayName">
         <source>Output</source>
         <target state="translated">Ausgabe</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Category|Publish|Description">
+        <source>Configures options in the publish process.</source>
+        <target state="translated">Konfiguriert Optionen im Veröffentlichungsprozess.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Category|Publish|DisplayName">
+        <source>Publish</source>
+        <target state="translated">Veröffentlichen</target>
         <note />
       </trans-unit>
       <trans-unit id="Category|StrongNaming|Description">
@@ -397,6 +467,11 @@
         <target state="translated">7 – Warnungen von C# 11</target>
         <note />
       </trans-unit>
+      <trans-unit id="EnumValue|WarningLevel.8|DisplayName">
+        <source>8 - Warnings from C# 13</source>
+        <target state="translated">8 – Warnungen von C# 13</target>
+        <note />
+      </trans-unit>
       <trans-unit id="EnumValue|WarningLevel.9999|DisplayName">
         <source>9999 - All warnings</source>
         <target state="translated">9999 – Alle Warnungen</target>
@@ -415,16 +490,6 @@
       <trans-unit id="StringProperty|AssemblyOriginatorKeyFile|DisplayName">
         <source>Strong name key file</source>
         <target state="translated">Schlüsseldatei mit starkem Namen</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="StringProperty|BaseIntermediateOutputPath|Description">
-        <source>Specifies the base location for the project's intermediate output during build. Subfolders will be appended to this path to differentiate project configuration.</source>
-        <target state="translated">Hiermit wird der Basisspeicherort für die Zwischenausgabe des Projekts während des Buildvorgangs angegeben. Zur Unterscheidung von Projektkonfigurationen werden an diesen Pfad Unterordner angefügt.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="StringProperty|BaseIntermediateOutputPath|DisplayName">
-        <source>Base intermediate output path</source>
-        <target state="translated">Basispfad für Zwischenausgabe</target>
         <note />
       </trans-unit>
       <trans-unit id="StringProperty|BaseOutputPath|Description">
@@ -449,7 +514,7 @@
       </trans-unit>
       <trans-unit id="StringProperty|DefineConstants|ValueEditors|ValueEditor|Metadata|TypeDescriptorText|Value">
         <source>Custom symbols</source>
-        <target state="new">Custom symbols</target>
+        <target state="translated">Benutzerdefinierte Symbole</target>
         <note />
       </trans-unit>
       <trans-unit id="StringProperty|DocumentationFile|Description">

@@ -1,16 +1,53 @@
-﻿# Up-to-date Check
+﻿﻿# Up-to-date Check (SDK-Style projects)
 
-The Project System's _Fast Up-to-date Check_ saves developers time by quickly assessing whether a project needs to be
+> [!IMPORTANT]
+> This document relates to SDK-style .NET projects only!
+>
+> Other project types use different mechanisms for their up-to-date checks:
+>
+> - Legacy C#/VB projects (.NET Framework-era) have a different check ([documentation](fast-up-to-date-legacy.md))
+> - Visual C++ projects (`.vcxproj`) use `.tlog` files, which contain all build inputs and outputs ([documentation](https://learn.microsoft.com/visualstudio/extensibility/visual-cpp-project-extensibility#incremental-builds-and-up-to-date-checks)).
+
+The Project System's _Fast Up-to-Date Check_ (FUTDC) saves developers time by quickly assessing whether a project needs to be
 built or not. If not, Visual Studio can avoid a comparatively expensive call to MSBuild.
 
-At a superficial level, the check compares timestamps between the project's inputs and its outputs. For more
-information on how it works in detail, see [this document](repo/up-to-date-check-implementation.md).
+The check compares timestamps between the project's inputs and its outputs. If any input is newer than one of the
+outputs, the project is considered out-of-date and will be built. There are other conditions that can lead to
+builds, but the most common cases relate to file system timestamps.
 
 Note that the _fast_ up-to-date check is intended to speed up the majority of cases where a build is not required,
 yet it cannot reliably cover all cases correctly. Where necessary, it errs on the side of caution as triggering a
 redundant build is better than not triggering a required build. MSBuild performs its own checks, so even if the 
 fast up-to-date check incorrectly determines the project is out-of-date, MSBuild may still not perform a full
 build.
+
+## Default inputs and outputs
+
+The FUTDC determines the input and output files to use from the project itself.
+
+Input items are specified via MSBuild items in evaluation data. The set of item types considered as inputs is
+controlled by [CPS's `ProjectSchemaDefinitions`](https://github.com/microsoft/VSProjectSystem/blob/master/doc/extensibility/custom_item_types.md).
+All `<ItemType>` entries that do not specify `UpToDateCheckInput="false"` will be treated as input items that
+contribute to the primary output of the project. As an example, the definitions for C# projects are given
+[here](https://github.com/dotnet/project-system/blob/70cb71d8e9bc682dbe66e591224c7dcaf5967b48/src/Microsoft.VisualStudio.ProjectSystem.Managed/ProjectSystem/Rules/Items/ProjectItemsSchema.CSharp.xaml#L12-L14)
+and [here](https://github.com/dotnet/project-system/blob/70cb71d8e9bc682dbe66e591224c7dcaf5967b48/src/Microsoft.VisualStudio.ProjectSystem.Managed/ProjectSystem/Rules/Items/ProjectItemsSchema.xaml#L112-L118).
+Note how `None` and `Content` items have `UpToDateCheckInput` set to `false`, meaning they are ignored by the FUTDC.
+Project systems may customize these item types to meet their needs.
+
+The primary output of the project is determined by the `OutputPath` MSBuild property. If that property is not
+defined, `OutDir` is used instead.
+
+Additional inputs are obtained from design-time build results:
+
+- `ResolvedAnalyzerReference` (sourced from the `CollectAnalyzersDesignTime` target, with the file identified in `ResolvedPath` item metadata)
+- `ResolvedCompilationReference` (via `CollectResolvedCompilationReferencesDesignTime` target, with files identified via `ResolvedPath`, `OriginalPath` and `CopyUpToDateMarker` item metadata)
+- `CopyToOutputDirectoryItem` (via `CollectCopyToOutputDirectoryItemDesignTime` target, with source path from the item spec and target path from `TargetPath` item metadata)
+- `UpToDateCheckInput` (via `CollectUpToDateCheckInputDesignTime` target, discussed below)
+
+Additional outputs are obtained from design-time build results:
+
+- `UpToDateCheckOutput` (via `CollectUpToDateCheckOutputDesignTime` target, discussed below)
+- `UpToDateCheckBuilt` (via `CollectUpToDateCheckBuiltDesignTime` target, discussed below)
 
 ## Customization
 
@@ -129,8 +166,6 @@ When multiple inputs produce one or more outputs, use `BuildUpToDateCheckInput` 
 
 ## Debugging
 
-### SDK-Style projects
-
 By default the up-to-date check does not log anything, though you can infer its decision from your build output summary:
 
 ```text
@@ -153,56 +188,34 @@ build output.
 - `Minimal` produces a single message per out-of-date project.
 - `Info` and `Verbose` provide increasingly detailed information about the inner workings of the check, which are useful for debugging.
 
-### .NET Framework (non-SDK-style) projects
-
-There is no built-in way to enable up-to-date check logging for old-style (non-SDK) projects. The [Tweakster extension](https://github.com/madskristensen/Tweakster#up-to-date-check-verbose) provides a UI option for this, however.
-
-Alternatively, to enable logging manually:
-
-1. Open a "Developer Command Prompt" for the particular version of Visual Studio you are using.
-2. Enter command:
-   ```text
-   vsregedit set "%cd%" HKCU General U2DCheckVerbosity dword 1
-   ```
-3. The message `Set value for U2DCheckVerbosity` should be displayed
-
-Run the same command with a `0` instead of a `1` to disable this logging.
-
-Note that `"%cd%"` evaluates to the current directory. When you first open a Developer Prompt, this path will be correct. To execute this command from arbitrary locations, you'll need to substitute the relevant quoted path, such as `"C:\Program Files\Microsoft Visual Studio\2022\Enterprise"`, with no trailing `/` or `>` character.
-
-You can change this value while VS is running and it will take effect immediately.
-
-When logging is enabled you'll see messages such as this in build output:
-
-> Project 'MyProject' is not up to date. Input file 'c:\path\myproject\class1.cs' is modified after output file 'C:\Path\MyProject\bin\Debug\MyProject.pdb'.
-
-#### Logging from the experimental hive
-
-If you wish to enable this logging for a particular hive (this is an advanced scenario) then pass the hive's name after the path. For example:
-
-```text
-vsregedit set "%cd%" Exp HKCU General U2DCheckVerbosity dword 1
-```
-
 ### Binary logs
 
 The fast up-to-date check logging will explain the reason for the failure at a high level. Often it's necessary to dig
 deeper into the build to understand why the failure occurs.
 
-The best technique for this is to:
+To capture binary logs of builds made by VS:
 
-1. Capture a binary build log (also called a "binlog"), and
-1. view it with the [MSBuild structured log viewer](https://msbuildlog.com/).
+1. Open a Developer Command Prompt for the version of Visual Studio you want to use.
+1. Set two environment variables:
+   - Command
+      ```cmd
+      set MSBuildDebugEngine=1
+      set MSBUILDDEBUGPATH=c:\some\path
+      ```
+   - PowerShell
+      ```powershell
+      $env:MSBuildDebugEngine = "1"
+      $env:MSBUILDDEBUGPATH = "c:\some\path"
+      ```
+   You can use whatever path you like for `MSBUILDDEBUGPATH`, but it must be writeable by the current user.
+1. Type `devenv` to start Visual Studio with this configuration.
+1. Open the `MSBUILDDEBUGPATH` path in Windows Explorer to see the captured binlog and other diagnostic files.
+1. Open `.binlog` files in [MSBuild structured log viewer](https://msbuildlog.com/).
 
-The [Project System Tools](https://github.com/dotnet/project-system-tools) extension enables capturing binlogs for builds that happen within Visual Studio.
+For more information, see [this documentation section](https://github.com/dotnet/msbuild/blob/main/documentation/wiki/Building-Testing-and-Debugging-on-Full-Framework-MSBuild.md#logs).
 
-The logs captured by that tool are usually adequate to diagnose build problems. They exclude some detail however, for performance reasons. If more data is required, see [this technique to get full-fidelity logs](https://github.com/dotnet/project-system-tools#getting-higher-fidelity-logs-from-vs).
-
-### Other types of projects
-
-Each project type takes its own approach to incremental builds.
-
-- Visual C++ projects use `.tlog` files, which are described [here](https://learn.microsoft.com/previous-versions/visualstudio/visual-studio-2017/extensibility/visual-cpp-project-extensibility?view=vs-2017#incremental-builds-and-up-to-date-checks).
+> [!TIP]
+> If you see _The type initializer for ‘Microsoft.Build.Shared.Debugging.DebugUtils’ threw an exception_ then the path set in `MSBUILDDEBUGPATH` is not writeable by Visual Studio. Close VS, set a new path and try again.
 
 ---
 

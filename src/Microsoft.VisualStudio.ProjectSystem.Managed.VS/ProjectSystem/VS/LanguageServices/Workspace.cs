@@ -6,9 +6,8 @@ using Microsoft.VisualStudio.LanguageServices.ProjectSystem;
 using Microsoft.VisualStudio.ProjectSystem.OperationProgress;
 using Microsoft.VisualStudio.ProjectSystem.Properties;
 using Microsoft.VisualStudio.ProjectSystem.Utilities;
-using Microsoft.VisualStudio.ProjectSystem.VS;
+using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Threading;
-using Microsoft.VisualStudio.Threading.Tasks;
 
 namespace Microsoft.VisualStudio.ProjectSystem.LanguageServices;
 
@@ -27,8 +26,6 @@ internal sealed class Workspace : OnceInitializedOnceDisposedUnderLockAsync, IWo
         Disposed
     }
 
-    private const string ProjectBuildRuleName = CompilerCommandLineArgs.SchemaName;
-
     private readonly DisposableBag _disposableBag;
 
     private readonly ProjectConfigurationSlice _slice;
@@ -44,7 +41,6 @@ internal sealed class Workspace : OnceInitializedOnceDisposedUnderLockAsync, IWo
     private readonly JoinableTaskCollection _joinableTaskCollection;
     private readonly JoinableTaskFactory _joinableTaskFactory;
     private readonly CancellationToken _unloadCancellationToken;
-    private readonly string _baseDirectory;
 
     /// <summary>Completes when the workspace has integrated build data.</summary>
     private readonly TaskCompletionSource _contextCreated = new(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -67,6 +63,16 @@ internal sealed class Workspace : OnceInitializedOnceDisposedUnderLockAsync, IWo
     /// <summary>Whether we have seen evaluation data yet.</summary>
     private bool _seenEvaluation;
 
+    /// <summary>
+    /// Stores any exception observed within <see cref="OnWorkspaceUpdateAsync"/> for inspection during heap analysis.
+    /// </summary>
+    /// <remarks>
+    /// If an exception occurs when processing updates, this object disposes itself. In such cases it would be very helpful
+    /// to be able to see the exception that caused the to occur in heap dumps. This field retains such an exception, purely
+    /// for such debugging.
+    /// </remarks>
+    private Exception? _updateException;
+
     /// <summary>Gets whether this workspace represents the primary active configuration.</summary>
     public bool IsPrimary { get; internal set; }
 
@@ -76,7 +82,7 @@ internal sealed class Workspace : OnceInitializedOnceDisposedUnderLockAsync, IWo
 
     public string ContextId => _contextId ?? throw new InvalidOperationException("Workspace has not been initialized.");
 
-    public object HostSpecificErrorReporter => Context;
+    public IVsLanguageServiceBuildErrorReporter2 ErrorReporter => (IVsLanguageServiceBuildErrorReporter2)Context;
 
     #endregion
 
@@ -111,8 +117,6 @@ internal sealed class Workspace : OnceInitializedOnceDisposedUnderLockAsync, IWo
         _joinableTaskFactory = joinableTaskFactory;
         _unloadCancellationToken = unloadCancellationToken;
 
-        _baseDirectory = Path.GetDirectoryName(_unconfiguredProject.FullPath);
-
         // We take ownership of the lifetime of the provided update handlers, and dispose them
         // when this workspace is disposed.
         _disposableBag = new() { updateHandlers };
@@ -139,10 +143,14 @@ internal sealed class Workspace : OnceInitializedOnceDisposedUnderLockAsync, IWo
     /// <summary>
     /// Adds an object that will be disposed along with this <see cref="Workspace"/> instance.
     /// </summary>
+    /// <remarks>
+    /// If this <see cref="Workspace"/> has already been disposed, <paramref name="disposable"/> will
+    /// be disposed immediately.
+    /// </remarks>
     /// <param name="disposable">The object to dispose when this object is disposed.</param>
     public void ChainDisposal(IDisposable disposable)
     {
-        Verify.NotDisposed(this);
+        // NOTE we intentionally don't Verify.NotDisposed here, as that can cause hangs during workspace construction
 
         _disposableBag.Add(disposable);
     }
@@ -206,8 +214,11 @@ internal sealed class Workspace : OnceInitializedOnceDisposedUnderLockAsync, IWo
                         _ => throw Assumes.NotReachable()
                     });
                 }
-                catch
+                catch (Exception ex)
                 {
+                    // Store the exception to assist with dump analysis.
+                    _updateException = ex;
+
                     // Tear down on any exception
                     await DisposeAsync();
 
@@ -312,8 +323,6 @@ internal sealed class Workspace : OnceInitializedOnceDisposedUnderLockAsync, IWo
             ContextState contextState,
             CancellationToken cancellationToken)
         {
-            IComparable version = GetConfiguredProjectVersion(update);
-
             ProcessProjectEvaluationHandlers();
 
             ProcessSourceItemsHandlers();
@@ -324,6 +333,8 @@ internal sealed class Workspace : OnceInitializedOnceDisposedUnderLockAsync, IWo
                 // It may change over time, such as in response to changing the active configuration,
                 // for example from Debug to Release.
                 ConfiguredProject configuredProject = update.Value.ConfiguredProject;
+
+                IComparable version = GetVersion(update);
 
                 foreach (IProjectEvaluationHandler evaluationHandler in _updateHandlers.EvaluationHandlers)
                 {
@@ -348,7 +359,7 @@ internal sealed class Workspace : OnceInitializedOnceDisposedUnderLockAsync, IWo
                     {
                         cancellationToken.ThrowIfCancellationRequested();
 
-                        sourceItemsHandler.Handle(Context, version, changes, contextState, _logger);
+                        sourceItemsHandler.Handle(Context, changes, contextState, _logger);
                     }
                 }
             }
@@ -402,7 +413,7 @@ internal sealed class Workspace : OnceInitializedOnceDisposedUnderLockAsync, IWo
         await OnProjectChangedAsync(
             _buildProgressRegistration,
             update,
-            hasChange: e => e.Value.BuildRuleUpdate.ProjectChanges[ProjectBuildRuleName].Difference.AnyChanges,
+            hasChange: e => e.Value.BuildRuleUpdate.ProjectChanges[CompilerCommandLineArgs.SchemaName].Difference.AnyChanges,
             applyFunc: ApplyProjectBuild,
             _unloadCancellationToken);
 
@@ -413,7 +424,7 @@ internal sealed class Workspace : OnceInitializedOnceDisposedUnderLockAsync, IWo
             ContextState state,
             CancellationToken cancellationToken)
         {
-            IProjectChangeDescription projectChange = update.Value.BuildRuleUpdate.ProjectChanges[ProjectBuildRuleName];
+            IProjectChangeDescription projectChange = update.Value.BuildRuleUpdate.ProjectChanges[CompilerCommandLineArgs.SchemaName];
 
             ProcessCommandLine();
 
@@ -437,10 +448,12 @@ internal sealed class Workspace : OnceInitializedOnceDisposedUnderLockAsync, IWo
 
                     Assumes.Present(parser);
 
-                    IComparable version = GetConfiguredProjectVersion(update);
+                    IComparable version = GetVersion(update);
 
-                    BuildOptions added   = parser.Parse(projectChange.Difference.AddedItems,   _baseDirectory);
-                    BuildOptions removed = parser.Parse(projectChange.Difference.RemovedItems, _baseDirectory);
+                    string baseDirectory = _unconfiguredProject.GetProjectDirectory();
+
+                    BuildOptions added   = parser.Parse(projectChange.Difference.AddedItems,   baseDirectory);
+                    BuildOptions removed = parser.Parse(projectChange.Difference.RemovedItems, baseDirectory);
 
                     foreach (ICommandLineHandler commandLineHandler in _updateHandlers.CommandLineHandlers)
                     {
@@ -509,16 +522,14 @@ internal sealed class Workspace : OnceInitializedOnceDisposedUnderLockAsync, IWo
                     isActiveEditorContext: _activeEditorContextTracker.IsActiveEditorContext(ContextId),
                     isActiveConfiguration: IsPrimary);
 
-                Context.StartBatch();
-
                 try
                 {
+                    await using IAsyncDisposable _ = await Context.CreateBatchScopeAsync(cancellationToken);
+
                     applyFunc(update, contextState, cancellationToken);
                 }
                 finally
                 {
-                    await Context.EndBatchAsync();
-
                     UpdateProgressRegistration();
                 }
             }
@@ -532,9 +543,9 @@ internal sealed class Workspace : OnceInitializedOnceDisposedUnderLockAsync, IWo
         }
     }
 
-    private static IComparable GetConfiguredProjectVersion(IProjectValueVersions update)
+    private static IComparable GetVersion(IProjectValueVersions update)
     {
-        return update.DataSourceVersions[ProjectDataSources.ConfiguredProjectVersion];
+        return new CompositeVersion(update.DataSourceVersions);
     }
 
     public async Task WriteAsync(Func<IWorkspace, Task> action, CancellationToken cancellationToken)
@@ -586,6 +597,46 @@ internal sealed class Workspace : OnceInitializedOnceDisposedUnderLockAsync, IWo
     {
         // Ensure we unblock any code waiting for initialization, and surface the error to the caller.
         _contextCreated.TrySetException(exception);
+    }
+
+    /// <summary>
+    /// Combines both the configured project version and the active configured project version
+    /// into a single comparable value. In this way, we can ensure we order updates correctly,
+    /// even when the active configuration changes.
+    /// </summary>
+    private sealed class CompositeVersion(IImmutableDictionary<NamedIdentity, IComparable> versions) : IComparable
+    {
+        private readonly IComparable _configuredProjectVersion = versions[ProjectDataSources.ConfiguredProjectVersion];
+        private readonly IComparable _activeConfigurationVersion = versions[ProjectDataSources.ActiveProjectConfiguration];
+
+        public int CompareTo(object obj)
+        {
+            if (obj is not CompositeVersion other)
+            {
+                throw new ArgumentException("Cannot compare to a non-CompositeVersion object.");
+            }
+
+            // The active configuration version will only increase. Every time the configuration
+            // changes, this value goes up.
+            //
+            // We check this *before* checking the configured project version, because when
+            // switching active configuration, the configured project version can go *down*.
+            // However, it's important for our processing of evaluation and build data that
+            // the version is monotonic (only increases).
+            //
+            // We achieve monotonicity by combining these two versions.
+            int c = _activeConfigurationVersion.CompareTo(other._activeConfigurationVersion);
+
+            if (c is not 0)
+            {
+                // Active configuration differs, so compare on this alone.
+                return c;
+            }
+
+            // Active configuration is identical. Compare the configured project versions
+            // for that configuration directly.
+            return _configuredProjectVersion.CompareTo(other._configuredProjectVersion);
+        }
     }
 
     /// <summary>

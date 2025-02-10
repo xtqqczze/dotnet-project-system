@@ -2,43 +2,29 @@
 
 using Microsoft.VisualStudio.Threading;
 
-namespace Microsoft.VisualStudio.ProjectSystem.VS
+namespace Microsoft.VisualStudio.ProjectSystem.VS;
+
+/// <summary>
+///     An implementation of <see cref="ISafeProjectGuidService"/> that waits until the project
+///     has been loaded into the host environment before returning the project GUID.
+/// </summary>
+[Export(typeof(ISafeProjectGuidService))]
+internal class VsSafeProjectGuidService : ISafeProjectGuidService
 {
-    /// <summary>
-    ///     An implementation of <see cref="ISafeProjectGuidService"/> that waits until the project
-    ///     has been loaded into the host environment before returning the project GUID.
-    /// </summary>
-    [Export(typeof(ISafeProjectGuidService))]
-    internal class VsSafeProjectGuidService : ISafeProjectGuidService
+    private readonly UnconfiguredProject _project;
+    private readonly IUnconfiguredProjectTasksService _tasksService;
+
+    [ImportingConstructor]
+    public VsSafeProjectGuidService(UnconfiguredProject project, IUnconfiguredProjectTasksService tasksService)
     {
-        private readonly IUnconfiguredProjectTasksService _tasksService;
+        _project = project;
+        _tasksService = tasksService;
+    }
 
-        [ImportingConstructor]
-        public VsSafeProjectGuidService(UnconfiguredProject project, IUnconfiguredProjectTasksService tasksService)
-        {
-            _tasksService = tasksService;
+    public async Task<Guid> GetProjectGuidAsync(CancellationToken cancellationToken = default)
+    {
+        await _tasksService.PrioritizedProjectLoadedInHost.WithCancellation(cancellationToken);
 
-#pragma warning disable RS0030 // IProjectGuidService is banned
-            ProjectGuidServices = new OrderPrecedenceImportCollection<IProjectGuidService>(projectCapabilityCheckProvider: project);
-#pragma warning restore RS0030
-        }
-
-        [ImportMany]
-        public OrderPrecedenceImportCollection<IProjectGuidService> ProjectGuidServices { get; }
-
-        public async Task<Guid> GetProjectGuidAsync(CancellationToken cancellationToken = default)
-        {
-            await _tasksService.PrioritizedProjectLoadedInHost.WithCancellation(cancellationToken);
-
-#pragma warning disable RS0030 // IProjectGuidService is banned
-            IProjectGuidService? projectGuidService = ProjectGuidServices.FirstOrDefault()?.Value;
-            return projectGuidService switch
-            {
-                null => Guid.Empty,
-                IProjectGuidService2 projectGuidService2 => await projectGuidService2.GetProjectGuidAsync(),
-                _ => projectGuidService.ProjectGuid
-            };
-#pragma warning restore RS0030
-        }
+        return await _project.GetProjectGuidAsync();
     }
 }

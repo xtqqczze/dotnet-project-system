@@ -217,6 +217,11 @@
         <target state="translated">最短初始屏幕显示时间</target>
         <note />
       </trans-unit>
+      <trans-unit id="StringProperty|MinimumSplashScreenDisplayTime|ValueEditors|ValueEditor|Metadata|EvaluatedValueFailedValidationMessage|Value">
+        <source>This property must be an integer number.</source>
+        <target state="translated">此属性必须是整数。</target>
+        <note />
+      </trans-unit>
     </body>
   </file>
 </xliff>

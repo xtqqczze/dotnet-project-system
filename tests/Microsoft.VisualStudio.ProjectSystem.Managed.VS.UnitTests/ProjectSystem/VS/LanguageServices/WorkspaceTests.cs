@@ -3,7 +3,6 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.VisualStudio.LanguageServices.ProjectSystem;
 using Microsoft.VisualStudio.ProjectSystem.Utilities;
-using Microsoft.VisualStudio.ProjectSystem.VS;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Threading;
 using Task = System.Threading.Tasks.Task;
@@ -18,11 +17,11 @@ namespace Microsoft.VisualStudio.ProjectSystem.LanguageServices;
 public class WorkspaceTests
 {
     private static BuildOptions EmptyBuildOptions { get; } = new BuildOptions(
-            sourceFiles: ImmutableArray<CommandLineSourceFile>.Empty,
-            additionalFiles: ImmutableArray<CommandLineSourceFile>.Empty,
-            metadataReferences: ImmutableArray<CommandLineReference>.Empty,
-            analyzerReferences: ImmutableArray<CommandLineAnalyzerReference>.Empty,
-            analyzerConfigFiles: ImmutableArray<string>.Empty);
+        sourceFiles: [],
+        additionalFiles: [],
+        metadataReferences: [],
+        analyzerReferences: [],
+        analyzerConfigFiles: []);
 
     [Fact]
     public async Task Dispose_DisposesChainedDisposables()
@@ -40,6 +39,21 @@ public class WorkspaceTests
         await workspace.DisposeAsync();
 
         Assert.Equal(1, disposedCount);
+    }
+
+    [Fact]
+    public async Task ChainDisposal_DisposesArgumentIfAlreadyDisposed()
+    {
+        var workspace = await CreateInstanceAsync();
+
+        await workspace.DisposeAsync();
+
+        var disposable = new Mock<IDisposable>(MockBehavior.Strict);
+        disposable.Setup(o => o.Dispose());
+
+        workspace.ChainDisposal(disposable.Object);
+
+        disposable.VerifyAll();
     }
 
     [Fact]
@@ -63,7 +77,7 @@ public class WorkspaceTests
             factory: () => Mock.Of<IWorkspaceUpdateHandler>(MockBehavior.Loose),
             disposeAction: () => disposeCount++);
 
-        var workspace = await CreateInstanceAsync(updateHandlers: new UpdateHandlers(new[] { exportFactory }));
+        var workspace = await CreateInstanceAsync(updateHandlers: new UpdateHandlers([exportFactory]));
 
         Assert.Equal(0, disposeCount);
 
@@ -86,8 +100,6 @@ public class WorkspaceTests
         await Assert.ThrowsAsync<ObjectDisposedException>(() => workspace.WriteAsync(w => Task.CompletedTask, CancellationToken.None));
         await Assert.ThrowsAsync<ObjectDisposedException>(() => workspace.WriteAsync(w => TaskResult.EmptyString, CancellationToken.None));
         await Assert.ThrowsAsync<ObjectDisposedException>(() => workspace.OnWorkspaceUpdateAsync(null!));
-
-        Assert.Throws<ObjectDisposedException>(() => workspace.ChainDisposal(null!));
     }
 
     [Theory]
@@ -282,7 +294,7 @@ public class WorkspaceTests
         workspaceProjectContextFactory.VerifyAll();
         workspaceProjectContext.VerifyAll();
         unconfiguredProjectServices.VerifyAll();
-        unconfiguredProject.VerifyAll();
+        unconfiguredProject.Verify();
 
         Assert.Same(workspaceProjectContext.Object, workspace.Context);
     }
@@ -354,7 +366,7 @@ public class WorkspaceTests
             }
             """);
 
-        Mock<IWorkspaceProjectContext> workspaceProjectContext = new(MockBehavior.Loose);
+        Mock<IWorkspaceProjectContext> workspaceProjectContext = new IWorkspaceProjectContextMock();
         Mock<IWorkspaceUpdateHandler> updateHandler = new(MockBehavior.Strict);
         Mock<IProjectEvaluationHandler> projectEvaluationHandler = updateHandler.As<IProjectEvaluationHandler>();
 
@@ -370,7 +382,7 @@ public class WorkspaceTests
                 o => o.Handle(
                     workspaceProjectContext.Object,
                     It.IsAny<ProjectConfiguration>(),
-                    1,
+                    It.IsAny<IComparable>(),
                     It.IsAny<IProjectChangeDescription>(),
                     It.IsAny<ContextState>(),
                     It.IsAny<IManagedProjectDiagnosticOutputService>()));
@@ -379,7 +391,7 @@ public class WorkspaceTests
         var workspace = await CreateInstanceAsync(
             evaluationRuleUpdate: evaluationRuleUpdate,
             workspaceProjectContext: workspaceProjectContext.Object,
-            updateHandlers: new UpdateHandlers(new[] { ExportFactoryFactory.Implement(() => updateHandler.Object) }));
+            updateHandlers: new UpdateHandlers([ExportFactoryFactory.Implement(() => updateHandler.Object)]));
 
         updateHandler.Verify();
     }
@@ -414,7 +426,7 @@ public class WorkspaceTests
             }
             """);
 
-        Mock<IWorkspaceProjectContext> workspaceProjectContext = new(MockBehavior.Loose);
+        Mock<IWorkspaceProjectContext> workspaceProjectContext = new IWorkspaceProjectContextMock();
         Mock<IWorkspaceUpdateHandler> updateHandler = new(MockBehavior.Strict);
         Mock<IProjectEvaluationHandler> projectEvaluationHandler = updateHandler.As<IProjectEvaluationHandler>();
 
@@ -431,7 +443,7 @@ public class WorkspaceTests
                     o => o.Handle(
                         workspaceProjectContext.Object,
                         It.IsAny<ProjectConfiguration>(),
-                        1,
+                        It.IsAny<IComparable>(),
                         It.IsAny<IProjectChangeDescription>(),
                         new ContextState(false, true),
                         It.IsAny<IManagedProjectDiagnosticOutputService>()));
@@ -440,7 +452,7 @@ public class WorkspaceTests
         var workspace = await CreateInstanceAsync(
             evaluationRuleUpdate: evaluationRuleUpdate,
             workspaceProjectContext: workspaceProjectContext.Object,
-            updateHandlers: new UpdateHandlers(new[] { ExportFactoryFactory.Implement(() => updateHandler.Object) }));
+            updateHandlers: new UpdateHandlers([ExportFactoryFactory.Implement(() => updateHandler.Object)]));
 
         updateHandler.Verify();
     }
@@ -462,7 +474,7 @@ public class WorkspaceTests
             }
             """);
 
-        Mock<IWorkspaceProjectContext> workspaceProjectContext = new(MockBehavior.Loose);
+        Mock<IWorkspaceProjectContext> workspaceProjectContext = new IWorkspaceProjectContextMock();
         Mock<IWorkspaceUpdateHandler> updateHandler = new(MockBehavior.Strict);
         Mock<ISourceItemsHandler> sourceItemsHandler = updateHandler.As<ISourceItemsHandler>();
 
@@ -477,7 +489,6 @@ public class WorkspaceTests
                 .Setup(
                     o => o.Handle(
                         workspaceProjectContext.Object,
-                        1,
                         It.IsAny<ImmutableDictionary<string, IProjectChangeDescription>>(),
                         new ContextState(false, true),
                         It.IsAny<IManagedProjectDiagnosticOutputService>()));
@@ -486,7 +497,7 @@ public class WorkspaceTests
         var workspace = await CreateInstanceAsync(
             sourceItemsUpdate: sourceItemsUpdate,
             workspaceProjectContext: workspaceProjectContext.Object,
-            updateHandlers: new UpdateHandlers(new[] { ExportFactoryFactory.Implement(() => updateHandler.Object) }));
+            updateHandlers: new UpdateHandlers([ExportFactoryFactory.Implement(() => updateHandler.Object)]));
 
         updateHandler.Verify();
     }
@@ -522,7 +533,7 @@ public class WorkspaceTests
               }
               """);
 
-        Mock<IWorkspaceProjectContext> workspaceProjectContext = new(MockBehavior.Loose);
+        Mock<IWorkspaceProjectContext> workspaceProjectContext = new IWorkspaceProjectContextMock();
         Mock<IWorkspaceUpdateHandler> updateHandler = new(MockBehavior.Strict);
         Mock<ICommandLineHandler> commandLineHandler = updateHandler.As<ICommandLineHandler>();
 
@@ -535,7 +546,7 @@ public class WorkspaceTests
             commandLineHandler.Setup(
                 o => o.Handle(
                     workspaceProjectContext.Object,
-                    1,
+                    It.IsAny<IComparable>(),
                     It.Is<BuildOptions>(options => options.MetadataReferences.Select(r => r.Reference).SingleOrDefault() == "Added.dll"),
                     It.Is<BuildOptions>(options => options.MetadataReferences.Select(r => r.Reference).SingleOrDefault() == "Removed.dll"),
                     new ContextState(false, true),
@@ -556,7 +567,7 @@ public class WorkspaceTests
             buildRuleUpdate: buildRuleUpdate,
             commandLineParserServices: commandLineParserServices,
             workspaceProjectContext: workspaceProjectContext.Object,
-            updateHandlers: new UpdateHandlers(new[] { ExportFactoryFactory.Implement(() => updateHandler.Object) }));
+            updateHandlers: new UpdateHandlers([ExportFactoryFactory.Implement(() => updateHandler.Object)]));
 
         updateHandler.Verify();
     }
@@ -610,14 +621,14 @@ public class WorkspaceTests
     }
 
     [Fact]
-    public async Task Update_StartBatchThrows()
+    public async Task Update_CreateBatchScopeAsyncThrows()
     {
         Exception ex = new("Error starting batch");
 
         Mock<IWorkspaceProjectContext> workspaceProjectContext = new(MockBehavior.Strict);
 
-        // StartBatch throws
-        workspaceProjectContext.Setup(o => o.StartBatch()).Throws(ex);
+        // CreateBatchScopeAsync throws
+        workspaceProjectContext.Setup(o => o.CreateBatchScopeAsync(It.IsAny<CancellationToken>())).Throws(ex);
 
         // Expect disposal
         workspaceProjectContext.Setup(o => o.Dispose());
@@ -628,15 +639,17 @@ public class WorkspaceTests
     }
 
     [Fact]
-    public async Task Update_EndBatchAsyncThrows()
+    public async Task Update_BatchScopeDisposalThrows()
     {
         Exception ex = new("Error starting batch");
 
         Mock<IWorkspaceProjectContext> workspaceProjectContext = new(MockBehavior.Strict);
+        Mock<IAsyncDisposable> batchScopeDisposable = new();
 
-        // EndBatchAsync throws
-        workspaceProjectContext.Setup(o => o.StartBatch());
-        workspaceProjectContext.Setup(o => o.EndBatchAsync()).Throws(ex);
+        // DisposeAsync throws
+        batchScopeDisposable.Setup(o => o.DisposeAsync()).Throws(ex);
+
+        workspaceProjectContext.Setup(o => o.CreateBatchScopeAsync(It.IsAny<CancellationToken>())).Returns(new ValueTask<IAsyncDisposable>(batchScopeDisposable.Object));
 
         // Expect disposal
         workspaceProjectContext.Setup(o => o.Dispose());
@@ -656,7 +669,7 @@ public class WorkspaceTests
     }
 
     [Fact]
-    public async Task Fault_BeforeInitialisation()
+    public async Task Fault_BeforeInitialization()
     {
         var workspace = await CreateInstanceAsync(applyEvaluation: false);
 
@@ -674,9 +687,9 @@ public class WorkspaceTests
     }
 
     [Fact]
-    public async Task Fault_AfterInitialisation()
+    public async Task Fault_AfterInitialization()
     {
-        // Initialised after this call (as we apply evaluation data)
+        // Initialized after this call (as we apply evaluation data)
         var workspace = await CreateInstanceAsync(applyEvaluation: true);
 
         int count = 0;
@@ -685,7 +698,7 @@ public class WorkspaceTests
 
         Assert.Equal(1, count);
 
-        // Faulting once initialised won't stop callers from using the workspace.
+        // Faulting once initialized won't stop callers from using the workspace.
         // It only means we won't keep the workspace up to date over time as the project
         // changes.
         workspace.Fault(new Exception());
@@ -741,7 +754,7 @@ public class WorkspaceTests
 
         workspaceProjectContextFactory.VerifyAll();
         unconfiguredProjectServices.VerifyAll();
-        unconfiguredProject.VerifyAll();
+        unconfiguredProject.Verify();
     }
 
     [Theory] // Configurations          Project GUID                               Expected
@@ -795,17 +808,17 @@ public class WorkspaceTests
         IProjectSubscriptionUpdate? buildRuleUpdate = null)
     {
         var commandLineParserService = new Mock<ICommandLineParserService>(MockBehavior.Strict);
-        commandLineParserService.Setup(o => o.Parse(It.IsAny<IEnumerable<string>>(), """C:\MyProject""")).Returns(EmptyBuildOptions);
+        commandLineParserService.Setup(o => o.Parse(It.IsAny<IEnumerable<string>>(), """C:\MyProject\""")).Returns(EmptyBuildOptions);
 
         slice ??= ProjectConfigurationSlice.Create(ImmutableStringDictionary<string>.EmptyOrdinal.Add("TargetFramework", "net6.0"));
         unconfiguredProject ??= UnconfiguredProjectFactory.ImplementFullPath("""C:\MyProject\MyProject.csproj""");
         projectGuid ??= Guid.NewGuid();
-        updateHandlers ??= new UpdateHandlers(Array.Empty<ExportFactory<IWorkspaceUpdateHandler>>());
+        updateHandlers ??= new UpdateHandlers([]);
         logger ??= IManagedProjectDiagnosticOutputServiceFactory.Create();
         activeWorkspaceProjectContextTracker ??= IActiveEditorContextTrackerFactory.Create();
         commandLineParserServices ??= new(ImportOrderPrecedenceComparer.PreferenceOrder.PreferredComesFirst) { commandLineParserService.Object };
         dataProgressTrackerService ??= IDataProgressTrackerServiceFactory.Create();
-        workspaceProjectContext ??= Mock.Of<IWorkspaceProjectContext>(MockBehavior.Loose);
+        workspaceProjectContext ??= new IWorkspaceProjectContextMock().Object;
         workspaceProjectContextFactory ??= IWorkspaceProjectContextFactoryFactory.ImplementCreateProjectContext(delegate { return workspaceProjectContext; });
         faultHandlerService ??= IProjectFaultHandlerServiceFactory.Create();
 #pragma warning disable VSSDK005
@@ -851,7 +864,8 @@ public class WorkspaceTests
         ConfiguredProject? configuredProject = null,
         IProjectSubscriptionUpdate? evaluationRuleUpdate = null,
         IProjectSubscriptionUpdate? sourceItemsUpdate = null,
-        int configuredProjectVersion = 1)
+        int configuredProjectVersion = 1,
+        int activeConfigurationVersion = 1)
     {
         configuredProject ??= ConfiguredProjectFactory.Create();
 
@@ -899,14 +913,20 @@ public class WorkspaceTests
         var update = WorkspaceUpdate.FromEvaluation((configuredProject, projectSnapshot, evaluationRuleUpdate, sourceItemsUpdate));
 
         await workspace.OnWorkspaceUpdateAsync(
-            IProjectVersionedValueFactory.Create(update, ProjectDataSources.ConfiguredProjectVersion, configuredProjectVersion));
+            IProjectVersionedValueFactory.Create(
+                update,
+                dataSourceVersions: ImmutableDictionary.CreateRange<NamedIdentity, IComparable>([
+                    new(ProjectDataSources.ConfiguredProjectVersion, configuredProjectVersion),
+                    new(ProjectDataSources.ActiveProjectConfiguration, activeConfigurationVersion)
+                ])));
     }
 
     private static async Task ApplyBuildAsync(
         Workspace workspace,
         ConfiguredProject? configuredProject = null,
         IProjectSubscriptionUpdate? buildRuleUpdate = null,
-        int configuredProjectVersion = 1)
+        int configuredProjectVersion = 1,
+        int activeConfigurationVersion = 1)
     {
         configuredProject ??= ConfiguredProjectFactory.Create();
 
@@ -931,6 +951,11 @@ public class WorkspaceTests
         var update = WorkspaceUpdate.FromBuild((configuredProject, buildRuleUpdate));
 
         await workspace.OnWorkspaceUpdateAsync(
-            IProjectVersionedValueFactory.Create(update, ProjectDataSources.ConfiguredProjectVersion, configuredProjectVersion));
+            IProjectVersionedValueFactory.Create(
+                update,
+                dataSourceVersions: ImmutableDictionary.CreateRange<NamedIdentity, IComparable>([
+                    new(ProjectDataSources.ConfiguredProjectVersion, configuredProjectVersion),
+                    new(ProjectDataSources.ActiveProjectConfiguration, activeConfigurationVersion)
+                ])));
     }
 }

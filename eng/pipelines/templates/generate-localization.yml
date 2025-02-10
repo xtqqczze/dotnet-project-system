@@ -3,17 +3,29 @@
 jobs:
 - job: GenerateLocalization
   displayName: Generate Localization
-  timeoutInMinutes: 10
+  timeoutInMinutes: 25
   steps:
 
   ###################################################################################################################################################################
   # GENERATE LOCALIZATION
   ###################################################################################################################################################################
 
+  - script:
+    displayName: === Build Repository ===
+    condition: false
+
   # Use a disabled, empty script to display the section header in the pipeline UI.
   - script:
     displayName: === Generate Localization ===
     condition: false
+
+  # Ensure the .NET runtime needed by OneLocBuildSetup is installed.
+  - task: UseDotNet@2
+    displayName: Install .NET Runtime
+    inputs:
+      packageType: runtime
+      # This should match the target in OneLocBuildSetup.csproj.
+      version: 8.0.x
 
   # Creates the LocProject.json and perform some necessary file copying and renaming.
   - task: DotNetCoreCLI@2
@@ -54,7 +66,10 @@ jobs:
     condition: false
 
   # Publishes any associated information related to the OneLocBuild process.
-  - publish: $(Build.StagingDirectory)/loc
+  - task: 1ES.PublishPipelineArtifact@1
+    inputs:
+      path: $(Build.StagingDirectory)/loc
+      artifact: OneLocBuild
+      publish: $(Build.StagingDirectory)/loc
     displayName: Publish Localization Artifacts
-    artifact: OneLocBuild
     condition: succeededOrFailed()

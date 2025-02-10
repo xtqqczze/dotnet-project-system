@@ -217,6 +217,11 @@
         <target state="translated">啟動顯示畫面顯示時間下限</target>
         <note />
       </trans-unit>
+      <trans-unit id="StringProperty|MinimumSplashScreenDisplayTime|ValueEditors|ValueEditor|Metadata|EvaluatedValueFailedValidationMessage|Value">
+        <source>This property must be an integer number.</source>
+        <target state="translated">此屬性必須是整數。</target>
+        <note />
+      </trans-unit>
     </body>
   </file>
 </xliff>

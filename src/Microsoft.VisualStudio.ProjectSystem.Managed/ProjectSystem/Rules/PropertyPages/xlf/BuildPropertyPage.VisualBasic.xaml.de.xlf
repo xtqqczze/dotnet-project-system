@@ -52,6 +52,16 @@
         <target state="translated">32-Bit bevorzugen</target>
         <note />
       </trans-unit>
+      <trans-unit id="BoolProperty|PreferNativeArm64|Description">
+        <source>Run on native hardware platform by default.</source>
+        <target state="translated">Standardmäßig auf nativer Hardwareplattform ausführen.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="BoolProperty|PreferNativeArm64|DisplayName">
+        <source>Prefer Native ARM64</source>
+        <target state="translated">Natives ARM64 bevorzugen</target>
+        <note />
+      </trans-unit>
       <trans-unit id="BoolProperty|PublishDocumentationFile|Description">
         <source>When this property is true, the XML documentation file for the project, if one is generated, is included in the publish output for the project. This property defaults to true.</source>
         <target state="translated">Wenn diese Eigenschaft TRUE ist, wird die XML-Dokumentationsdatei für das Projekt, sofern eine generiert wird, in der Veröffentlichungsausgabe für das Projekt eingeschlossen. Diese Eigenschaft wird standardmäßig auf TRUE festgelegt.</target>
@@ -304,43 +314,43 @@
       </trans-unit>
       <trans-unit id="EnumValue|OptionCompare.Binary|DisplayName">
         <source>Binary</source>
-        <target state="translated">Binär</target>
-        <note />
+        <target state="new">Binary</target>
+        <note>{Locked}</note>
       </trans-unit>
       <trans-unit id="EnumValue|OptionCompare.Text|DisplayName">
         <source>Text</source>
-        <target state="translated">Text</target>
-        <note />
+        <target state="new">Text</target>
+        <note>{Locked}</note>
       </trans-unit>
       <trans-unit id="EnumValue|OptionExplicit.Off|DisplayName">
         <source>Off</source>
-        <target state="translated">Aus</target>
-        <note />
+        <target state="new">Off</target>
+        <note>{Locked}</note>
       </trans-unit>
       <trans-unit id="EnumValue|OptionExplicit.On|DisplayName">
         <source>On</source>
-        <target state="translated">Ein</target>
-        <note />
+        <target state="new">On</target>
+        <note>{Locked}</note>
       </trans-unit>
       <trans-unit id="EnumValue|OptionInfer.Off|DisplayName">
         <source>Off</source>
-        <target state="translated">Aus</target>
-        <note />
+        <target state="new">Off</target>
+        <note>{Locked}</note>
       </trans-unit>
       <trans-unit id="EnumValue|OptionInfer.On|DisplayName">
         <source>On</source>
-        <target state="translated">Ein</target>
-        <note />
+        <target state="new">On</target>
+        <note>{Locked}</note>
       </trans-unit>
       <trans-unit id="EnumValue|OptionStrict.Off|DisplayName">
         <source>Off</source>
-        <target state="translated">Aus</target>
-        <note />
+        <target state="new">Off</target>
+        <note>{Locked}</note>
       </trans-unit>
       <trans-unit id="EnumValue|OptionStrict.On|DisplayName">
         <source>On</source>
-        <target state="translated">Aktiviert</target>
-        <note />
+        <target state="new">On</target>
+        <note>{Locked}</note>
       </trans-unit>
       <trans-unit id="EnumValue|RunPostBuildEvent.Always|DisplayName">
         <source>Always</source>
@@ -388,8 +398,8 @@
         <note />
       </trans-unit>
       <trans-unit id="StringProperty|DefineConstants|Description">
-        <source>Specifies custom conditional compilation constants for your application.</source>
-        <target state="translated">Gibt benutzerdefinierte Konstanten für die bedingte Kompilierung für Ihre Anwendung an.</target>
+        <source>Specifies custom conditional compilation constants for your application. Note that values are optional, for the optional behavior leave the value blank. If the value is a string, please add quotation marks around it.</source>
+        <target state="translated">Gibt benutzerdefinierte bedingte Kompilierungskonstanten für Ihre Anwendung an. Beachten Sie, dass die Werte optional sind. Für das optionale Verhalten lassen Sie den Wert leer. Wenn der Wert eine Zeichenkette ist, setzen Sie ihn bitte in Anführungszeichen.</target>
         <note />
       </trans-unit>
       <trans-unit id="StringProperty|DefineConstants|DisplayName">

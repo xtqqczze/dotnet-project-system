@@ -2,66 +2,66 @@
 
 using Microsoft.VisualStudio.Text;
 
-namespace Microsoft.VisualStudio.ProjectSystem.PackageRestore
+namespace Microsoft.VisualStudio.ProjectSystem.PackageRestore;
+
+internal static class RestoreHasher
 {
-    internal static class RestoreHasher
+    public static Hash CalculateHash(ProjectRestoreInfo restoreInfo)
     {
-        public static byte[] CalculateHash(ProjectRestoreInfo restoreInfo)
+        Requires.NotNull(restoreInfo);
+
+        using var hasher = new IncrementalHasher();
+
+        hasher.AppendProperty(nameof(restoreInfo.ProjectAssetsFilePath),           restoreInfo.ProjectAssetsFilePath);
+        hasher.AppendProperty(nameof(restoreInfo.MSBuildProjectExtensionsPath),    restoreInfo.MSBuildProjectExtensionsPath);
+        hasher.AppendProperty(nameof(restoreInfo.OriginalTargetFrameworks),        restoreInfo.OriginalTargetFrameworks);
+
+        foreach (TargetFrameworkInfo framework in restoreInfo.TargetFrameworks)
         {
-            Requires.NotNull(restoreInfo);
-
-            using var hasher = new IncrementalHasher();
-
-            AppendProperty(hasher, nameof(restoreInfo.ProjectAssetsFilePath),           restoreInfo.ProjectAssetsFilePath);
-            AppendProperty(hasher, nameof(restoreInfo.MSBuildProjectExtensionsPath),    restoreInfo.MSBuildProjectExtensionsPath);
-            AppendProperty(hasher, nameof(restoreInfo.OriginalTargetFrameworks),        restoreInfo.OriginalTargetFrameworks);
-
-            foreach (TargetFrameworkInfo framework in restoreInfo.TargetFrameworks)
-            {
-                AppendProperty(hasher, nameof(framework.TargetFrameworkMoniker), framework.TargetFrameworkMoniker);
-                AppendFrameworkProperties(hasher, framework);
-                AppendReferences(hasher, framework.ProjectReferences);
-                AppendReferences(hasher, framework.PackageReferences);
-                AppendReferences(hasher, framework.FrameworkReferences);
-                AppendReferences(hasher, framework.PackageDownloads);
-                AppendReferences(hasher, framework.CentralPackageVersions);
-            }
-
-            AppendReferences(hasher, restoreInfo.ToolReferences);
-
-            return hasher.GetHashAndReset();
+            hasher.AppendProperty(nameof(framework.TargetFrameworkMoniker), framework.TargetFrameworkMoniker);
+            hasher.AppendFrameworkProperties(framework);
+            hasher.AppendReferences(framework.ProjectReferences);
+            hasher.AppendReferences(framework.PackageReferences);
+            hasher.AppendReferences(framework.FrameworkReferences);
+            hasher.AppendReferences(framework.PackageDownloads);
+            hasher.AppendReferences(framework.CentralPackageVersions);
+            hasher.AppendReferences(framework.NuGetAuditSuppress);
         }
 
-        private static void AppendFrameworkProperties(IncrementalHasher hasher, TargetFrameworkInfo framework)
-        {
-            foreach (ProjectProperty property in framework.Properties)
-            {
-                AppendProperty(hasher, property.Name, property.Value);
-            }
-        }
+        AppendReferences(hasher, restoreInfo.ToolReferences);
 
-        private static void AppendReferences(IncrementalHasher hasher, ImmutableArray<ReferenceItem> references)
-        {
-            foreach (ReferenceItem reference in references)
-            {
-                AppendProperty(hasher, nameof(reference.Name), reference.Name);
-                AppendReferenceProperties(hasher, reference);
-            }
-        }
+        return hasher.GetHashAndReset();
+    }
 
-        private static void AppendReferenceProperties(IncrementalHasher hasher, ReferenceItem reference)
+    private static void AppendFrameworkProperties(this IncrementalHasher hasher, TargetFrameworkInfo framework)
+    {
+        foreach ((string key, string value) in framework.Properties)
         {
-            foreach (ReferenceProperty property in reference.Properties)
-            {
-                AppendProperty(hasher, property.Name, property.Value);
-            }
+            AppendProperty(hasher, key, value);
         }
+    }
 
-        private static void AppendProperty(IncrementalHasher hasher, string name, string value)
+    private static void AppendReferences(this IncrementalHasher hasher, ImmutableArray<ReferenceItem> references)
+    {
+        foreach (ReferenceItem reference in references)
         {
-            hasher.Append(name);
-            hasher.Append("|");
-            hasher.Append(value);
+            AppendProperty(hasher, nameof(reference.Name), reference.Name);
+            AppendReferenceProperties(hasher, reference);
         }
+    }
+
+    private static void AppendReferenceProperties(this IncrementalHasher hasher, ReferenceItem reference)
+    {
+        foreach ((string key, string value) in reference.Properties)
+        {
+            AppendProperty(hasher, key, value);
+        }
+    }
+
+    private static void AppendProperty(this IncrementalHasher hasher, string name, string value)
+    {
+        hasher.Append(name);
+        hasher.Append("|");
+        hasher.Append(value);
     }
 }
